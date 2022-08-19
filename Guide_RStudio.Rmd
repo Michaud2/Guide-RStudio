@@ -1,5 +1,5 @@
 ---
-title: "Guide d'introduction à l'utilisation de R"
+title: "Guide d'introduction à l'utilisation de RStudio"
 author: "Alexandre Michel"
 date: "`r Sys.Date()`"
 output:
