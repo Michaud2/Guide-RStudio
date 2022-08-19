@@ -12,8 +12,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-# **CONFIGURATION**
-
 ```{=html}
 <style type="text/css">
 
@@ -77,7 +75,7 @@ fichier = as.character(readfichier())
 # results = "hide" --> Le résultat du code n'apparaitra pas sur le fichier HTML produit
 ```
 
-## *Installation et activation des packages*
+# **Installation et activation des packages**
 
 Voici comment installer et activer le [package personnalisé](https://github.com/Michaud2/Package-R-EPA) que j'ai moi-même créé en parallèle à ce guide :
 
