@@ -79,7 +79,7 @@ fichier = as.character(readfichier())
 
 ## *Installation et activation des packages*
 
-Voici comment installer et activer le <https://github.com/Michaud2/Package-R-EPA>[package personnalisé] que j'ai créé en parallèle à ce guide :
+Voici comment installer et activer le [package personnalisé](https://github.com/Michaud2/Package-R-EPA) que j'ai moi-même créé en parallèle à ce guide :
 
 ```{r install_packages, eval=FALSE, results='hide'}
 install.packages("devtools")
