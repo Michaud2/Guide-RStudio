@@ -1,0 +1,1159 @@
+---
+title: "Guide d'introduction à l'utilisation de R"
+author: "Alexandre Michel"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    df_print: paged
+params:
+    fichier: "https://dimension.usherbrooke.ca/donnees/base2015CES.csv"
+editor_options: 
+  chunk_output_type: console
+---
+
+# **CONFIGURATION**
+
+```{=html}
+<style type="text/css">
+
+body{ /* Normal  */
+    font-size: 14px;
+    font-family: "Arial";
+  }
+td {  /* Table  */
+  font-size: 12px;
+  font-family: "Arial";
+}
+h1.title {
+  font-size: 38px;
+  font-family: "Arial";
+  color: DarkRed;
+}
+h1 { /* Header 1 */
+  font-size: 28px;
+  font-family: "Arial";
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+    font-family: "Arial";
+    color: Green;
+}
+h3 { /* Header 3 */
+  font-size: 20px;
+  font-family: "Arial";
+  color: Purple;
+}
+h4 { /* Header 4 */
+  font-size: 18px;
+  font-family: "Arial";
+  color: DarkBlue;
+}
+code.r{ /* Code block */
+    font-family: "Arial";
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+```
+
+```{r setup, include=FALSE}
+# Titre d'une figure : fig.cap = "..."
+knitr::opts_chunk$set(echo = TRUE,
+                      results = "markup",
+                      error = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
+readfichier = function()
+{ 
+  params$fichier
+}
+fichier = as.character(readfichier())
+
+# echo = FALSE --> Le code n'apparait pas sur le fichier HTML produit
+# results = "hide" --> Le résultat du code n'apparaitra pas sur le fichier HTML produit
+```
+
+## *Installation des packages*
+
+Voici comment installer les packages importants s'ils ne sont pas déjà présents sur l'ordinateur.
+
+```{r install_packages, eval = FALSE, results='hide'}
+install.packages("devtools", dependencies = TRUE)
+install.packages("conflicted", dependencies = TRUE)
+install.packages("showtext", dependencies = TRUE)
+install.packages("WDI", dependencies = TRUE)
+install.packages("lsr", dependencies = TRUE)
+install.packages("vcd", dependencies = TRUE)
+install.packages("questionr", dependencies = TRUE)
+install.packages("gmodels", dependencies = TRUE)
+install.packages("car", dependencies = TRUE)
+install.packages("DescTools", dependencies = TRUE)
+install.packages("multcomp", dependencies = TRUE)
+install.packages("FactoMineR", dependencies = TRUE)
+install.packages("rworldmap", dependencies = TRUE)
+install.packages("tidyverse", dependencies = TRUE)
+install.packages("ggthemes", dependencies = TRUE)    # --> darkunica
+install.packages("ggtext", dependencies = TRUE)
+install.packages("ggpubr", dependencies = TRUE)
+install.packages("ggpmisc", dependencies = TRUE)
+install.packages("ggrepel", dependencies = TRUE)
+install.packages("ggcharts", dependencies = TRUE)
+install.packages("ggforce", dependencies = TRUE)
+install.packages("openxlsx", dependencies = TRUE)
+install.packages("tcltk", dependencies = TRUE)
+install.packages("scales", dependencies = TRUE)
+install.packages("lubridate", dependencies = TRUE)
+install.packages("svglite", dependencies = TRUE)
+install.packages("ragg", dependencies = TRUE)
+install.packages("cowplot", dependencies = TRUE)
+install.packages("googleway", dependencies = TRUE)
+install.packages("ggspatial", dependencies = TRUE)
+install.packages("sf", dependencies = TRUE)
+install.packages("rnaturalearth", dependencies = TRUE)
+install.packages("rnaturalearthdata", dependencies = TRUE)
+```
+
+## *Activation des packages*
+
+Voici comment activer les packages importants lors de l"ouverture de RStudio.
+
+```{r library_packages, results="hide"}
+library("devtools")
+library("conflicted")
+library("showtext")
+library("WDI")
+library("lsr")
+library("vcd")
+library("questionr")
+library("gmodels")
+library("car")
+library("DescTools")
+library("multcomp")
+library("FactoMineR")
+library("rworldmap")
+library("tidyverse")
+library("ggthemes")
+library("ggtext")
+library("ggpubr")
+library("ggpmisc")
+library("ggrepel")
+library("ggcharts")
+library("ggforce")
+library("openxlsx")
+library("tcltk")
+library("scales")
+library("lubridate")
+library("svglite")
+library("ragg")
+library("cowplot")
+library("googleway")
+library("ggspatial")
+library("sf")
+library("rnaturalearth")
+library("rnaturalearthdata")
+
+showtext_opts(dpi = 96)
+showtext_auto(enable = TRUE)
+font_add_google("Inter")
+conflict_scout()
+conflict_prefer(name = "recode", winner = "car", quiet = TRUE)
+conflict_prefer(name = "Recode", winner = "car", quiet = TRUE)
+conflict_prefer(name = "filter", winner = "dplyr", quiet = TRUE)
+conflict_prefer(name = "select", winner = "dplyr", quiet = TRUE)
+conflict_prefer(name = "annotate", winner = "ggpp", quiet = TRUE)
+conflict_prefer(name = "col_factor", winner = "scales", quiet = TRUE)
+conflict_prefer(name = "discard", winner = "purrr", quiet = TRUE)
+conflict_prefer(name = "geyser", winner = "TH.data", quiet = TRUE)
+conflict_prefer(name = "lag", winner = "dplyr", quiet = TRUE)
+conflict_prefer(name = "some", winner = "car", quiet = TRUE)
+conflict_prefer(name = "get_legend", winner = "ggpubr", quiet = TRUE)
+conflict_prefer(name = "some", winner = "car", quiet = TRUE)
+conflict_prefer(name = "stamp", winner = "lubridate", quiet = TRUE)
+conflict_prefer(name = "theme_map", winner = "cowplot", quiet = TRUE)
+options(scipen = 999)
+conflict_scout()
+```
+
+```{r functions, include=FALSE}
+
+#### THÈMES GRAPHS GGPLOT2 ####
+
+# Fonction pour retrouver l'équation de régression
+lm_eq = function(x, y)
+{
+  modele = lm(y ~ x)
+  coeff = coefficients(modele)
+  if (round(coeff[1],1) >= 0){
+    eq = as.character(paste0("y == ", round(coeff[2],1), "*x + ", round(coeff[1],1)))
+  } else if (round(coeff[1],1) < 0){
+    eq = as.character(paste0("y == ", round(coeff[2],1), "*x ", round(coeff[1],1)))
+  }
+  eq
+}
+
+# Pie chart blank theme
+theme_pie = function(couleur = "#018849")
+{
+  theme = theme_bw(base_family = "Inter", base_line_size = 0.25) +
+    theme(
+      plot.title = element_text(face = "bold", size = 14, color = couleur, hjust = 0.5, vjust = 1, margin = margin(t = 0, r = 0, b = 0, l = 0)),
+      plot.subtitle = element_text(size = 8),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      axis.text = element_blank(),
+      axis.line = element_blank(),
+      axis.ticks = element_blank(),
+      legend.title = element_text(face = "bold", size = 12, color = couleur, hjust = 0.5),
+      legend.text = element_text(face = "plain", size = 8, color = "black", lineheight = 0.75),
+      legend.position = "right",
+      legend.margin = margin(0,0,0,0),
+      legend.box.margin = margin(t = 0, r = 1, b = 0, l = -2.5),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = NA),
+      panel.ontop = TRUE,
+      panel.border = element_blank()
+    )
+}
+
+# Standard Theme
+theme_defaut = function(couleur = "#018849", grille = "x", grille_top = FALSE)
+{
+  # grille = "h" --> grille horizontale
+  # grille = "v" --> grille verticale
+  # grille = "hv" --> grille horizontale + verticale
+  # grille = "x" --> aucune grille
+  # top = TRUE --> par défaut, la grille est devant le graphique
+  # top = FALSE --> permet de mettre la grille derrière le graph
+  if (grille == "h") {
+    theme = theme_bw(base_family = "Inter", base_line_size = 0.25) +
+      theme(
+        plot.title = element_text(face = "bold", size = 14, color = couleur, hjust = 0.5, vjust = 1, margin = margin(t = 0, r = 10, b = 10, l = 10)),
+        plot.subtitle = element_text(size = 8),
+        axis.title.x = element_text(face = "bold", size = 12, color = couleur, margin = margin(t = 15, r = 5, b = 0, l = 5)),
+        axis.title.y = element_text(face = "bold", size = 12, color = couleur, margin = margin(t = 5, r = 15, b = 5, l = 0)),
+        axis.text = element_text(face = "plain", size = 8, color = "black"),
+        axis.ticks = element_line(colour = "black", linetype = "solid", lineend = "round"),
+        legend.title = element_text(face = "bold", size = 12, color = couleur, hjust = 0.5),
+        legend.text = element_text(face = "plain", size = 8, color = "black", lineheight = 0.75),
+        panel.grid.major.y = element_line(colour = "black", linetype = 2, lineend = "round"),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = NA),
+        panel.ontop = grille_top,
+        panel.border = element_rect(colour = "black", fill = NA),
+        legend.position = "right",
+        legend.margin=margin(0,0,0,0),
+        legend.box.margin = margin(t = 0, r = 1, b = 0, l = -2)
+      )
+  } else if (grille == "v"){
+    theme = theme_bw(base_family = "Inter", base_line_size = 0.25) +
+      theme(
+        plot.title = element_text(face = "bold", size = 14, color = couleur, hjust = 0.5, vjust = 1, margin = margin(t = 0, r = 10, b = 10, l = 10)),
+        plot.subtitle = element_text(size = 8),
+        axis.title.x = element_text(face = "bold", size = 12, color = couleur, margin = margin(t = 15, r = 5, b = 0, l = 5)),
+        axis.title.y = element_text(face = "bold", size = 12, color = couleur, margin = margin(t = 5, r = 15, b = 5, l = 0)),
+        axis.text = element_text(face = "plain", size = 8, color = "black"),
+        axis.ticks = element_line(colour = "black", linetype = "solid", lineend = "round"),
+        legend.title = element_text(face = "bold", size = 12, color = couleur, hjust = 0.5),
+        legend.text = element_text(face = "plain", size = 8, color = "black", lineheight = 0.75),
+        panel.grid.major.x = element_line(colour = "black", linetype = 2, lineend = "round"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = NA),
+        panel.ontop = grille_top,
+        panel.border = element_rect(colour = "black", fill = NA),
+        legend.position = "right",
+        legend.margin=margin(0,0,0,0),
+        legend.box.margin = margin(t = 0, r = 1, b = 0, l = -2)
+      )
+  } else if (grille == "hv"){
+    theme = theme_bw(base_family = "Inter", base_line_size = 0.25) +
+      theme(
+        plot.title = element_text(face = "bold", size = 14, color = couleur, hjust = 0.5, vjust = 1, margin = margin(t = 0, r = 10, b = 10, l = 10)),
+        plot.subtitle = element_text(size = 8),
+        axis.title.x = element_text(face = "bold", size = 12, color = couleur, margin = margin(t = 15, r = 5, b = 0, l = 5)),
+        axis.title.y = element_text(face = "bold", size = 12, color = couleur, margin = margin(t = 5, r = 15, b = 5, l = 0)),
+        axis.text = element_text(face = "plain", size = 8, color = "black"),
+        axis.ticks = element_line(colour = "black", linetype = "solid", lineend = "round"),
+        legend.title = element_text(face = "bold", size = 12, color = couleur, hjust = 0.5),
+        legend.text = element_text(face = "plain", size = 8, color = "black", lineheight = 0.75),
+        panel.grid.major = element_line(colour = "black", linetype = 2, lineend = "round"),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = NA),
+        panel.ontop = grille_top,
+        panel.border = element_rect(colour = "black", fill = NA),
+        legend.position = "right",
+        legend.margin=margin(0,0,0,0),
+        legend.box.margin = margin(t = 0, r = 1, b = 0, l = -2)
+      )
+  } else if (grille == "x"){
+    theme = theme_bw(base_family = "Inter", base_line_size = 0.25) +
+      theme(
+        plot.title = element_text(face = "bold", size = 14, color = couleur, hjust = 0.5, vjust = 1, margin = margin(t = 0, r = 10, b = 10, l = 10)),
+        plot.subtitle = element_text(size = 8),
+        axis.title.x = element_text(face = "bold", size = 12, color = couleur, margin = margin(t = 15, r = 5, b = 0, l = 5)),
+        axis.title.y = element_text(face = "bold", size = 12, color = couleur, margin = margin(t = 5, r = 15, b = 5, l = 0)),
+        axis.text = element_text(face = "plain", size = 8, color = "black"),
+        axis.ticks = element_line(colour = "black", linetype = "solid", lineend = "round"),
+        legend.title = element_text(face = "bold", size = 12, color = couleur, hjust = 0.5),
+        legend.text = element_text(face = "plain", size = 8, color = "black", lineheight = 0.75),
+        legend.position = "right",
+        legend.margin=margin(0,0,0,0),
+        legend.box.margin = margin(t = 0, r = 1, b = 0, l = -2),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = NA),
+        panel.ontop = grille_top,
+        panel.border = element_rect(colour = "black", fill = NA)
+      )
+  }
+}
+
+#### MARGE D'ERREUR ####
+
+MargeErreur = function()
+{
+  # Cette fonction sert à calculer la marge d'erreur d'un échantillon.
+  cat("\n")
+  Z = as.numeric(readline(prompt = "Entrez la valeur du Z associée au niveau de confiance désiré (95% = 1.96) : \n"))
+  cat("\n")
+  pr = as.numeric(readline(prompt = "Entrez la proporition à vérifier en base 1 (0.5 offre la plus grande marge d'erreur) : \n"))
+  cat("\n")
+  n = as.numeric(readline(prompt = "Entrez la taille de l'échantillon en valeur absolue : \n"))
+  me=round(((sqrt(pr*(1-pr)/n))*Z),4)
+  cat("\n")
+  print(c("Taille de l'échantillon :", n),quote=F)
+  print(c("Niveau de confiance :", Z),quote=F)
+  print(c("Proportion :", pr),quote=F)
+  print(c("Marge d'erreur :", me),quote=F)
+  print(c("Intervalle de confiance (borne inférieure) :", pr-me),quote=F)
+  print(c("Intervalle de confiance (borne supérieure) :", pr+me),quote=F)
+  cat("\n")
+  return(me)
+}
+
+#### IMPORTATION D'UNE BASE DE DONNÉES ####
+
+Importer = function(indicateurs = NULL, colonnes = TRUE, encodage = "UTF-8")
+{
+  # Cette fonction permet d'importer une base de données et de la convertir à l'aide du package tibble
+  # Les arguments suivants composent la fonction :
+  # indicateurs : Seulement si l'option 4 (Package WDI est sélectionné)
+  # Prend la forme suivante : indicateurs = c("SP.POP.TOTL", "EN.ATM.CO2E.PC", "EG.USE.PCAP.KG.OE")
+  # colonnes : a la valeur TRUE par défaut afin de nommer les colonnes de la base à partir de la première rangée (changer pour colonnes = FALSE si la première rangée ne contient pas les noms des colonnes)
+  # encodage : a la valeur "UTF-8" par défaut afin de lire les caractères comme les accents. Il n'est pas recommandé d'en changer la valeur si vous ne comprenez pas ce qu'est l'encodage.
+  cat("\n")
+  format = as.numeric(readline(prompt = "Choix du format de fichier (inscrire le chiffre correspondant) : \n 1 = .xlsx \n 2 = .csv (anglais ,) \n 3 = .csv (français ;) \n 4 = .sav \n 5 = Package WDI \n"))
+  cat("\n")
+  if (format == 1){
+    type = as.numeric(readline(prompt = "Le fichier est-il téléchargé sur l'ordinateur ou hébergé sur un site web (URL)? \n 1 = fichier téléchargé \n 2 = hébergé sur un site web (URL) \n"))
+    cat("\n")
+    if (type == 1) {
+      fichier = tk_choose.files(caption = "Choisir le fichier de la base de données")
+    } else if (type == 2) {
+      fichier = as.character(readline(prompt = 'Copiez-collez le lien URL de la base de données sans guillemets ici :  \n'))
+    }
+    cat("\n")
+    feuille = as.numeric(readline(prompt = "Entrez le numéro de la feuille Excel désirée (1, 2, 3, etc.) :  \n"))
+    base = read.xlsx(fichier, sheet = feuille, colNames = colonnes)
+  } else if (format == 2){
+    type = as.numeric(readline(prompt = "Le fichier est-il téléchargé sur l'ordinateur ou hébergé sur un site web (URL)? \n 1 = fichier téléchargé \n 2 = hébergé sur un site web (URL) \n"))
+    cat("\n")
+    if (type == 1) {
+      fichier = tk_choose.files(caption = "Choisir le fichier de la base de données")
+    } else if (type == 2) {
+      fichier = as.character(readline(prompt = 'Copiez-collez le lien URL de la base de données sans guillemets ici :  \n'))
+    }
+    cat("\n")
+    base = read.csv(fichier, header = colonnes, encoding = encodage)
+  } else if (format == 3){
+    type = as.numeric(readline(prompt = "Le fichier est-il téléchargé sur l'ordinateur ou hébergé sur un site web (URL)? \n 1 = fichier téléchargé \n 2 = hébergé sur un site web (URL) \n"))
+    cat("\n")
+    if (type == 1) {
+      fichier = tk_choose.files(caption = "Choisir le fichier de la base de données")
+    } else if (type == 2) {
+      fichier = as.character(readline(prompt = 'Copiez-collez le lien URL de la base de données sans guillemets ici :  \n'))
+    }
+    cat("\n")
+    base = read.csv2(fichier, header = colonnes, encoding = encodage)
+  } else if (format == 4){
+    type = as.numeric(readline(prompt = "Le fichier est-il téléchargé sur l'ordinateur ou hébergé sur un site web (URL)? \n 1 = fichier téléchargé \n 2 = hébergé sur un site web (URL) \n"))
+    cat("\n")
+    if (type == 1) {
+      fichier = tk_choose.files(caption = "Choisir le fichier de la base de données")
+    } else if (type == 2) {
+      fichier = as.character(readline(prompt = 'Copiez-collez le lien URL de la base de données sans guillemets ici :  \n'))
+    }
+    cat("\n")
+    base = spss.get(file.choose(), use.value.labels = colonnes, encoding = encodage)
+  } else if (format == 5){
+    nbr_pays = as.numeric(readline(prompt = "Entrez le nombre de pays pour lesquels les données seront importées :  \n"))
+    cat("\n")
+    pays = c()
+    for (i in 1:nbr_pays){
+      pays[i] = as.character(readline(prompt = paste("Entrez le code (ISO 2 lettres) du pays # ",i," :  \n", sep = "")))
+      cat("\n")
+    }
+    start = as.numeric(readline(prompt = "Entrez la date de début : \n"))
+    end = as.numeric(readline(prompt = "Entrez la date de fin : \n"))
+    cat("\n")
+    base = WDI(country = pays, indicator = indicateurs, start = start, end = end)
+      cat("\n")
+  }
+  base = as_tibble(base)
+  cat("\n")
+  return(base)
+}
+
+
+#### RENOMMER DES VARIABLES ####
+
+Renommer = function(base, anciens_noms, nouv_noms)
+{
+  # Cette fonction sert à renommer des variables dans une base de données.
+  # Voici les arguments :
+  # base = le nom de la base de données
+  # anciens_noms = sous la forme c("var1", "var2", "var3")
+  # nouv_noms = sous la forme c("nouv_var1", "nouv_var2", "nouv_var3")
+  cat("\n")
+  for(i in 1:length(anciens_noms)){
+    base = rename(base, !! nouv_noms[i] := !! anciens_noms[i])
+  }
+  cat("\n")
+  return(base)
+}
+
+#### ANALYSE UNIVARIÉE QUALITATIVE ####
+
+SommaireQuali = function(variable, na.rm = TRUE)
+{
+  if (na.rm == TRUE){
+    x = variable[!is.na(variable)]
+  } else if (na.rm == FALSE){
+    x = variable
+  }
+  freqq = freq(x)
+  cat("\n")
+  cat("Fréquences des valeurs de la variables :\n")
+  cat("\n")
+  print(freqq)
+  cat("\n")
+  y = as.factor(x)
+  freq = summary(y)
+  mode = names(freq)[freq[names(freq)] == max(freq)]
+  if (suppressWarnings(!is.na(as.numeric(mode)))){
+    mode = as.numeric(mode)
+  } else if (mode=="TRUE"|mode=="FALSE"){
+    mode = as.logical(mode)
+  }
+  print(c("Mode :", mode), quote = FALSE)
+  return(freqq)
+}
+
+#### ANALYSE UNIVARIÉE QUANTITATIVE ####
+
+SommaireQuanti = function(variable, na.rm=TRUE)
+{
+  if (na.rm == TRUE){
+    moyenne = round(mean(as.numeric(variable),na.rm = TRUE),2)
+    mediane = round(median(as.numeric(variable),na.rm = TRUE),2)
+    ecart_type = round(sd(as.numeric(variable), na.rm = TRUE),2)
+    quantiles = quantile(as.numeric(variable),na.rm = TRUE,names = FALSE)
+  } else if (na.rm == FALSE){
+    moyenne = round(mean(as.numeric(variable),na.rm = FALSE),2)
+    mediane = round(median(as.numeric(variable),na.rm = FALSE),2)
+    ecart_type = round(sd(as.numeric(variable), na.rm = FALSE),2)
+    quantiles = quantile(as.numeric(variable),na.rm = FALSE,names = FALSE)
+  }
+
+  cat("\n")
+  print(c("Moyenne :",moyenne), quote = FALSE)
+  print(c("Ecart-type :",ecart_type), quote = FALSE)
+  cat("\n")
+  print(c("Minimum (0%) :",quantiles[1]), quote = FALSE)
+  print(c("Premier quartile (25%) :",quantiles[2]), quote = FALSE)
+  print(c("Mediane (50%) :",mediane), quote = FALSE)
+  print(c("Dernier quartile (75%) :",quantiles[4]), quote = FALSE)
+  print(c("Maximum (100%) :",quantiles[5]), quote = FALSE)
+  return(list("moyenne" = moyenne, "mediane" = mediane, "ecart_type" = ecart_type))
+}
+
+# AJOUTER NUAGE DE POINTS ?
+
+#### ANALYSE BIVARIÉE QUALI+QUALI ####
+
+TableLabels = function(variable_X, variable_Y)
+{
+  X_name_long = as.character(deparse(substitute(variable_X)))
+  X_name = strsplit(X_name_long,"$", fixed=TRUE)
+  X_name = as.character(X_name[[1]][2])
+  
+  Y_name_long = as.character(deparse(substitute(variable_Y)))
+  Y_name = strsplit(Y_name_long,"$", fixed=TRUE)
+  Y_name = as.character(Y_name[[1]][2])
+  
+  t1=table(variable_Y,variable_X)
+  names(dimnames(t1)) = c(Y_name, X_name)
+  return(t1)
+}
+
+QualiQuali = function(variable_X, variable_Y, V_corrected = TRUE, na.rm = TRUE)
+{
+  # V_corrected = FALSE --> utilise une version non ajustée du V de Cramer (la version classique)
+  X_name_long = as.character(deparse(substitute(variable_X)))
+  X_name = strsplit(X_name_long,"$", fixed=TRUE)
+  X_name = as.character(X_name[[1]][2])
+  
+  Y_name_long = as.character(deparse(substitute(variable_Y)))
+  Y_name = strsplit(Y_name_long,"$", fixed=TRUE)
+  Y_name = as.character(Y_name[[1]][2])
+  
+  base_name_long = as.character(deparse(substitute(variable_X)))
+  base_name = strsplit(base_name_long,"$", fixed=TRUE)
+  base = get(as.name(base_name[[1]][1]))
+  
+  if (na.rm == TRUE){
+    x = variable_X[!is.na(variable_X) & !is.na(variable_Y)]
+    y = variable_Y[!is.na(variable_X) & !is.na(variable_Y)]
+  } else if (na.rm == FALSE){
+    x = variable_X
+    y = variable_Y
+  }
+  
+  t1 = TableLabels(x, y)
+  
+  cat("\n")
+  cat("Tableau de contingence (% de colonnes) : ")
+  cat("\n")
+  CrossTable(y, x, prop.r = FALSE, prop.t=FALSE, prop.chisq=FALSE, format = "SPSS", dnn = c(Y_name, X_name))
+  cat("\n")
+  
+  chisq = chisq.test(t1)
+  p = as.numeric(chisq$p.value)
+  if (V_corrected == FALSE){
+    V = round(CramerV(t1, correct = FALSE), 4)
+  } else if (V_corrected == TRUE){
+    V = round(CramerV(t1, correct = TRUE), 4)
+  }
+  
+  print(paste("Valeur du p :", p),quote=FALSE)
+  cat("\n")
+  if (p < 0.05){
+    print(paste("Le croisement entre la variable «", X_name, "» et la variable «", Y_name, "» est statistiquement significatif."), quote=FALSE)
+    cat("\n")
+    print(paste("V de Cramer :", V), quote=FALSE)
+    cat("\n")
+    if (V < 0.1){
+      print(paste("La force de la relation entre la variable «", X_name, "» et la variable «", Y_name, "» est triviale puisque le V de Cramer inférieur à 0.1."), quote=FALSE)
+    } else if (V >= 0.1 & V < 0.3){
+      print(paste("La force de la relation entre la variable «", X_name, "» et la variable «", Y_name, "» est petite puisque le V de Cramer se situe entre 0.1 et 0.3."), quote=FALSE)
+    }
+    else if (V >= 0.3 & V < 0.5){
+      print(paste("La force de la relation entre la variable «", X_name, "» et la variable «", Y_name, "» est moyenne puisque le V de Cramer se situe entre 0.3 et 0.5."), quote=FALSE)
+    }
+    else if (V >= 0.5){
+      print(paste("La force de la relation entre la variable «", X_name, "» et la variable «", Y_name, "» est grande puisque le V de Cramer est supérieur à 0.5."), quote=FALSE)
+    }
+  } else if (p >= 0.05){
+    print(paste("Le croisement entre la variable «", X_name, "» et la variable «", Y_name, "» n'est pas statistiquement significatif. Il n'y a donc pas de relation entre les deux variables."), quote=FALSE)
+  }
+  return(list("p_value" = p, "V_Cramer" = V))
+}
+
+#### ANALYSE BIVARIÉE QUALI+QUANTI ####
+
+QualiQuanti = function(variable_X, variable_Y, Y_ord = FALSE, na.rm = TRUE)
+{
+  # Y_ord = TRUE --> La VD polytomique est considérée comme ordonnée (tau de Kendall)
+  # Y_ord = FALSE --> La VD polytomique n'est pas considérée comme ordonnée (ANOVA)
+  X_name_long = as.character(deparse(substitute(variable_X)))
+  X_name = strsplit(X_name_long,"$", fixed=TRUE)
+  X_name = as.character(X_name[[1]][2])
+  
+  Y_name_long = as.character(deparse(substitute(variable_Y)))
+  Y_name = strsplit(Y_name_long,"$", fixed=TRUE)
+  Y_name = as.character(Y_name[[1]][2])
+  
+  base_name_long = as.character(deparse(substitute(variable_X)))
+  base_name = strsplit(base_name_long,"$", fixed=TRUE)
+  base = get(as.name(base_name[[1]][1]))
+  
+  if (na.rm == TRUE){
+    x = variable_X[!is.na(variable_X) & !is.na(variable_Y)]
+    y = variable_Y[!is.na(variable_X) & !is.na(variable_Y)]
+  } else if (na.rm == FALSE){
+    x = variable_X
+    y = variable_Y
+  }
+  
+  t1 = tapply(y, x, FUN = mean)
+
+  cat("\n")
+  cat("Tableau des moyennes de chaque groupe : ")
+  cat("\n")
+  print(t(t1))
+  cat("\n")
+  
+  if (length(unique(x)) == 2){
+    t.test = t.test(y ~ x)
+    p = t.test$p.value
+    D = round(cohensD(y ~ x), 4)
+    
+    print(paste("Valeur du p :", p),quote=FALSE)
+    cat("\n")
+    if (p < 0.05){
+      print(paste("Le croisement entre la variable «", X_name, "» et la variable «", Y_name, "» est statistiquement significatif."), quote=FALSE)
+      cat("\n")
+      print(paste("D de Cohen :", D), quote=FALSE)
+      cat("\n")
+      if (D < 0.2){
+        print(paste("La force de la relation entre la variable «", X_name, "» et la variable «", Y_name, "» est triviale puisque le D de Cohen inférieur à 0.2."), quote=FALSE)
+      } else if (D >= 0.2 & D < 0.5){
+        print(paste("La force de la relation entre la variable «", X_name, "» et la variable «", Y_name, "» est petite puisque le D de Cohen se situe entre 0.2 et 0.5."), quote=FALSE)
+      }
+      else if (D >= 0.5 & D < 0.8){
+        print(paste("La force de la relation entre la variable «", X_name, "» et la variable «", Y_name, "» est moyenne puisque le D de Cohen se situe entre 0.5 et 0.8."), quote=FALSE)
+      }
+      else if (D >= 0.8){
+        print(paste("La force de la relation entre la variable «", X_name, "» et la variable «", Y_name, "» est grande puisque le D de Cohen est supérieur à 0.8."), quote=FALSE)
+      }
+    } else if (p >= 0.05){
+      print(paste("Le croisement entre la variable «", X_name, "» et la variable «", Y_name, "» n'est pas statistiquement significatif. Il n'y a donc pas de relation entre les deux variables."), quote=FALSE)
+    }
+    return(list("p_value" = p, "D_Cohen" = D))
+    
+  } else if (length(unique(x)) > 2){
+    if (Y_ord == TRUE){
+      stats = cor.test(x, y, method = "kendall")
+      p = stats$p.value
+      tau = round(stats$estimate, 4)
+      
+      print(paste("Valeur du p :", p),quote=FALSE)
+      cat("\n")
+      if (p < 0.05){
+        print(paste("Le croisement entre la variable «", X_name, "» et la variable «", Y_name, "» est statistiquement significatif."), quote=FALSE)
+        cat("\n")
+        print(paste("tau de Kendall :", tau), quote=FALSE)
+        cat("\n")
+        if (tau >= 0){
+          if (tau < 0.1){
+            print(paste("La force de la relation proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est triviale puisque le tau de Kendall est inférieur à 0.1."), quote=FALSE)
+          } else if (tau >= 0.1 & tau < 0.3){
+            print(paste("La force de la relation proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est et petite puisque le tau de Kendall se situe entre 0.1 et 0.3."), quote=FALSE)
+          }
+          else if (tau >= 0.3 & tau < 0.5){
+            print(paste("La force de la relation proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est et moyenne puisque le tau de Kendall se situe entre 0.3 et 0.5."), quote=FALSE)
+          }
+          else if (tau >= 0.5){
+            print(paste("La force de la relation proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est et grande puisque le tau de Kendall est supérieur à 0.5."), quote=FALSE)
+          }
+        } else if (tau < 0){
+          if (tau > -0.1){
+            print(paste("La force de la relation inversement proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est triviale puisque le tau de Kendall est supérieur à -0.1."), quote=FALSE)
+          } else if (tau <= -0.1 & tau > -0.3){
+            print(paste("La force de la relation inversement proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est petite puisque le tau de Kendall se situe entre -0.1 et -0.3."), quote=FALSE)
+          }
+          else if (tau <= -0.3 & tau > -0.5){
+            print(paste("La force de la relation inversement proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est moyenne puisque le tau de Kendall se situe entre -0.3 et -0.5."), quote=FALSE)
+          }
+          else if (tau <= -0.5){
+            print(paste("La force de la relation inversement proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est grande puisque le tau de Kendall est inférieur à -0.5."), quote=FALSE)
+          }
+        }
+      } else if (p >= 0.05){
+        print(paste("Le croisement entre la variable «", X_name, "» et la variable «", Y_name, "» n'est pas statistiquement significatif. Il n'y a donc pas de relation entre les deux variables."), quote=FALSE)
+      }
+      return(list("p_value" = p, "tau_Kendall" = tau))
+      
+    } else if (Y_ord == FALSE){
+      x = as.factor(x)
+      anova = aov(y ~ x)
+      anova.res = summary(anova) # to print
+      p = anova.res[[1]][[5]][1]
+      cat("\n")
+      cat("\n")
+      cat("Modèle d'analyse de la variance à un facteur (one-way ANOVA) : \n")
+      cat("\n")
+      print(anova.res)
+      cat("\n")
+      cat("\n")
+      print(paste("Valeur du p :", p),quote=FALSE)
+      cat("\n")
+      if (p < 0.05){
+        print(paste("Le croisement entre la variable «", X_name, "» et la variable «", Y_name, "» est statistiquement significatif. L'ANOVA détecte au minimum une différence significative entre les moyennes des groupes."), quote=FALSE)
+        cat("\n")
+        cat("\n")
+        cat("\n")
+        test = summary(glht(anova, linfct = mcp(x = "Tukey")))
+        print(test)
+        cat("\n")
+      } else if (p >= 0.05){
+        print(paste("Le croisement entre la variable «", X_name, "» et la variable «", Y_name, "» n'est pas statistiquement significatif. Il n'y a donc pas de différence significative entre les moyennes des groupes."), quote=FALSE)
+      }
+      return(list("p_value" = p))
+      
+    }
+  }
+}
+
+
+#### ANALYSE BIVARIÉE QUANTI+QUANTI ####
+
+QuantiQuanti = function(variable_X, variable_Y, na.rm = TRUE)
+{
+  X_name_long = as.character(deparse(substitute(variable_X)))
+  X_name = strsplit(X_name_long,"$", fixed=TRUE)
+  X_name = as.character(X_name[[1]][2])
+  
+  Y_name_long = as.character(deparse(substitute(variable_Y)))
+  Y_name = strsplit(Y_name_long,"$", fixed=TRUE)
+  Y_name = as.character(Y_name[[1]][2])
+  
+  base_name_long = as.character(deparse(substitute(variable_X)))
+  base_name = strsplit(base_name_long,"$", fixed=TRUE)
+  base = get(as.name(base_name[[1]][1]))
+  
+  if (na.rm == TRUE){
+    x = variable_X[!is.na(variable_X) & !is.na(variable_Y)]
+    y = variable_Y[!is.na(variable_X) & !is.na(variable_Y)]
+  } else if (na.rm == FALSE){
+    x = variable_X
+    y = variable_Y
+  }
+  
+  modele = lm(y ~ x)
+  coeff = coefficients(modele)
+  if (round(coeff[1],1) >= 0){
+    eq = as.character(paste0("y = ", round(coeff[2],1), "*x + ", round(coeff[1],1)))
+  } else if (round(coeff[1],1) < 0){
+    eq = as.character(paste0("y = ", round(coeff[2],1), "*x ", round(coeff[1],1)))
+  }
+  {plot(x, y,
+        main = paste("croisement entre la variable «", X_name, "» et la variable «", Y_name, "»"),
+        sub = eq,
+        xlab = X_name,
+        ylab = Y_name)
+  abline(modele, col = "blue")}
+  cat("\n")
+  cat("Modèle de régression linéaire simple : \n")
+  cat("\n")
+  print(summary(modele))
+  cat("\n")
+  
+  cor = cor.test(x, y, method = "pearson")
+  p = as.numeric(cor$p.value)
+  r = round(as.numeric(cor$estimate), 4)
+  r2 = round((r^2)*100, 4)
+  
+  print(paste("Valeur du p :", p),quote=FALSE)
+  cat("\n")
+  if (p < 0.05){
+    print(paste("Le croisement entre la variable «", X_name, "» et la variable «", Y_name, "» est statistiquement significatif."), quote=FALSE)
+    cat("\n")
+    print(paste("r de Pearson (coefficient de corrélation) :", r), quote=FALSE)
+    print(paste("R2 (coefficient de détermination en %) :", r2), quote=FALSE)
+    cat("\n")
+    if (r >= 0){
+      if (r < 0.1){
+        print(paste("La force de la relation proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est triviale puisque le r de Pearson est inférieur à 0.1."), quote=FALSE)
+      } else if (r >= 0.1 & r < 0.3){
+        print(paste("La force de la relation proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est et petite puisque le r de Pearson se situe entre 0.1 et 0.3."), quote=FALSE)
+      }
+      else if (r >= 0.3 & r < 0.5){
+        print(paste("La force de la relation proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est et moyenne puisque le r de Pearson se situe entre 0.3 et 0.5."), quote=FALSE)
+      }
+      else if (r >= 0.5){
+        print(paste("La force de la relation proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est et grande puisque le r de Pearson est supérieur à 0.5."), quote=FALSE)
+      }
+    } else if (r < 0){
+      if (r > -0.1){
+        print(paste("La force de la relation inversement proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est triviale puisque le r de Pearson est supérieur à -0.1."), quote=FALSE)
+      } else if (r <= -0.1 & r > -0.3){
+        print(paste("La force de la relation inversement proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est petite puisque le r de Pearson se situe entre -0.1 et -0.3."), quote=FALSE)
+      }
+      else if (r <= -0.3 & r > -0.5){
+        print(paste("La force de la relation inversement proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est moyenne puisque le r de Pearson se situe entre -0.3 et -0.5."), quote=FALSE)
+      }
+      else if (r <= -0.5){
+        print(paste("La force de la relation inversement proportionnelle entre la variable «", X_name, "» et la variable «", Y_name, "» est grande puisque le r de Pearson est inférieur à -0.5."), quote=FALSE)
+      }
+    }
+  } else if (p >= 0.05){
+    print(paste("Le croisement entre la variable «", X_name, "» et la variable «", Y_name, "» n'est pas statistiquement significatif. Il n'y a donc pas de relation entre les deux variables.\n"), quote=FALSE)
+  }
+  return(list("p_value" = p, "r_Pearson" = r, "R2" = r2))
+}
+
+```
+
+# **IMPORTATION D'UNE BASE DE DONNÉES**
+
+L'importation d'une base de données se fait de la manière la plus facile à l'aide de la fonction Importer() qui provient du package personnalisé. La fonction vous guide dans l'importation de la base en posant quelques questions simples à répondre directement dans la console.
+
+Pour suivre les exemples qui seront présentés dans ce guide, vous pouvez importer la base de données en format .csv qui est hébergée sur ce lien en le copiant et en le collant (SANS GUILLEMETS) lorsque ce sera demandé : <https://dimension.usherbrooke.ca/donnees/base2015CES.csv>
+
+```{r base_CACHE, include = FALSE}
+
+base = read.csv2(fichier, header = TRUE, encoding = "UTF-8")
+base = as_tibble(base)
+```
+
+```{r base, eval = FALSE}
+
+base = Importer()
+```
+
+# **MANIPULATIONS SUR UNE BASE DE DONNÉES**
+
+## *Visualiser et explorer une base de données*
+
+Dans une base de données, chaque colonne devrait être une variable (ou champ) et chaque rangée devrait être une observation (ou unité d'analyse). Certaines bases ne sont pas naturellement structurées de cette manière, nous verrons quelques manipulations qui permettent de bien formater une base de données dans cette section.
+
+Pour l'instant, il est possible de la faire apparaître en exécutant uniquement le nom de la base de données ou bien en cliquant sur son nom dans la fenêtre « Environment » de RStudio qui se situe en haut à droite.
+
+On observe alors que notre base de données d'exemple possède 43 variables (colonnes) et 7572 observations (rangées). On peut aussi oberser le « type » de chaque variable, son format d'encodage, juste en dessous de son nom. Voici les différents types de variables possibles :
+
+- int = nombres entiers
+- num = nombres décimaux
+- chr = données textuelles
+- logical = valeurs booléennes (TRUE, FALSE)
+- complex = nombres complexes ou imaginaires (nous ne l'utiliserons pas, ou très peu)
+
+```{r base_show}
+base
+```
+
+C'est à cette étape qu'on doit bien comprendre les deux éléments centraux d'une base de données : les observations et les variables.
+
+### Observations
+
+Il est important de bien comprendre ce que chaque observation (rangée) signifie ou représente puisqu'il s'agit là de l'unité d'analyse de la base de données. Les données concernent-elles des individus, des agrégats comme des pays, des évènements, etc ?
+
+### Variables
+
+Il est aussi primordial de comprendre de quoi est constituée chaque colonne de la base de données. Chaque colonne étant une variable, elle est mesurée par un indicateur précis qui n'est parfois pas codé de manière intuitive. C'est pourquoi il est nécessaire de ce référer constamment au **codebook** relié à la base de données. Il s'agit de notre bible lorsque l'on travaille avec des données complexes. Chaque base de données devrait venir avec un codebook lors de son téléchargement pour être capable de bien la lire.
+
+## *Renommer des variables (colonnes)*
+
+On peut renommer des colonnes précises à l'aide de la fonction Renommer() qui fait partie du package personnalisé. On renomme ici les variables "age" et "p.aborig" pour "an_naissance" et "autochtone"
+
+```{r base_rename}
+base = Renommer(base, c("age", "p.aborig"), c("an_naissance", "autochtone"))
+```
+
+## *Recoder les valeurs d'une variable*
+
+On peut recoder une variable de deux manières : avec la fonction recode() ou par des conditions.
+
+### La fonction recode() du package car
+
+La fonction recode() possède deux arguments : l'appel à la variable puis les modifications à apporter. Chaque nouvelle valeur est séparée par un point-virgule (;) alors que chaque modification a la structure suivante : ancienne(s)\_valeur(s) = nouvelle_valeur. On peut attribuer la même nouvelle valeur à plusieurs anciennes valeurs, comme c'est le cas ici, en enveloppant les anciennes valeurs avec la fonction c(). Toutes ces modifications doivent se trouver entre deux guillemets, comme vous pouvez l'observer.
+
+On recode ici la variable "autochtone" nouvellement renommée pour en faire une dichotomique (OUI ou NON) plutôt qu'avoir l'appartenance à chaque groupe. À noter que l'on doit nécessairement préciser le package d'où provient la fonction en ajoutant "car::" devant son nom puisqu'elle entre en conflit avec une fonction du même nom du package dplyr.
+
+```{r base_recode_fun}
+base$autochtone = recode(base$autochtone, '1=0 ; c(2,3,4,5,6)=1 ; else=NA')
+```
+
+### Une ou plusieurs conditions
+
+La condition se lit comme suit : l'année de naissance sera maintenant égale à NA lorsque celle-ci a la valeur 1000. La variable dont les valeurs sont modifiées se trouve avant les crochets [] et la variable sur laquelle la condition est testée se trouve à l'intérieur des crochets, avec la condition (constituée d'un opérateur logique et d'une valeur à tester). La nouvelle valeur attribuée à la variable lorsque la condition est vraie se trouve après le égal = à la toute fin, ici NA.
+
+On recode ici les variables "an_naissance" et "income" afin d'en retirer les valeurs indésirables.
+
+```{r base_recode_cond}
+base$an_naissance[base$an_naissance == 1000] = NA
+
+base$income[base$income < 1000 | base$income > 1000000] = NA
+```
+
+## *Créer une nouvelle variable*
+
+La création d'une variable se produit lorsque l'on attribue la valeur d'une variable à un nouveau nom qui n'existe pas encore. On peut créer une nouvelle variable à l'aide d'une simple opération mathématique ou par une condition plus complexe.
+
+### Par la fonction recode
+
+Si le résultat de la fonction recode() est sauvegardé dans une variable qui n'existe pas encore, une nouvelle variable sera crée dans la base de données.
+
+```{r base_var_recode}
+base$a_vote = recode(base$p.voted, '1="Oui" ; 2="Non" ; else=NA')
+```
+
+### Par une opération mathématique
+
+On peut effectuer une simple opération mathématique sur toutes les valeurs d'une variable et sauvegarder le résultat dans une nouvelle variable.
+
+On crée ici la nouvelle variable "age" en soustrayant l'année de réponse au questionnaire (2015) et l'année de naissance de la personne.
+
+```{r base_var_math}
+base$age = 2015 - as.numeric(base$an_naissance)
+```
+
+### Par une ou plusieurs conditions
+
+Le processus est exactement le même que pour le recodage des valeurs par une condition, mais on sauvegarde le résultat dans une nouvelle variable plutôt qu'en écraser une déjà existante.
+
+```{r base_var_cond}
+base$agecat = base$age
+base$agecat[base$agecat >= 18 & base$agecat < 40] = 1
+base$agecat[base$agecat >= 40 & base$agecat < 60] = 2
+base$agecat[base$agecat >= 60] = 3
+```
+
+## *Filtrer une base de données*
+
+On peut filtrer une base de données selon deux objectifs : conserver seulement certaines variables (colonnes) ou seulement certaines observations (rangées).
+
+### Conserver seulement certaines variables (colonnes)
+
+En utilisant la fonction subset(), on peut appeler l'argument "select" afin de conserver des variables en fonction de leur nom.
+
+```{r base_var_select}
+base2 = select(base, sex.r, age, agecat, p.intpol, a_vote, income)
+base2
+```
+
+### Conserver seulement certaines observations (rangées)
+
+On peut aussi utiliser la fonction subset() pour conserver des observations (rangées) en fonction d'une condition. On peut alors créer une base de données qui ne contient que des femmes de la manière suivante :
+
+```{r base_obs_filter}
+base_femmes = filter(base, sex.r == 2)
+base_femmes
+```
+
+# **L'ANALYSE UNIVARIÉE**
+
+## *Variable qualitative*
+
+La fonction SommaireQuali() du package personnalisé permet d'afficher le mode et les fréquences des valeurs, ce qui offre un aperçu très clair de la distribution avec laquelle on travaille. Cette fonction est nécessaire afin de bien comprendre les données avec lesquelles on travaille et les caractéristiques d'une distribution. N'hésitez pas à l'utiliser à outrance.
+
+Par défaut, le second argument "na.rm" a la valeur "TRUE", ce qui permet de ne pas considérer les NA dans l'équation. Si vous désirez considérer les NA, vous pouvez inscrire "na.rm = FALSE".
+
+```{r univar_quali}
+freq_vote = SommaireQuali(base$a_vote)
+```
+
+## *Variable quantitative*
+
+Suivant le même principe que pour une variable qualitative, la fonction SommaireQuanti() du package personnalisé permet d'obtenir les informations importantes à la description d'une distribution, mais cette fois-ci pour une variable quantitative. Cette fonction ressort une liste de trois objets (moyenne, médiane et écart-type) qui peuvent ensuite être accéder individuellement.
+
+Tout comme pour la fonction précédente, le second argument "na.rm" a la valeur "TRUE" par défaut, ce qui permet de ne pas considérer les NA dans l'équation. Si vous désirez considérer les NA, vous pouvez inscrire "na.rm = FALSE".
+
+```{r univar_quanti}
+income_sommaire = SommaireQuanti(base$income)
+```
+
+```{r, eval=FALSE}
+income_sommaire$moyenne
+income_sommaire$mediane
+income_sommaire$ecart_type
+```
+
+# **ANALYSE BIVARIÉE**
+
+L'analyse bivariée contient au moins quatre étapes cruciales pour bien être exécutée : le recodage des variables, la mesure de significativité (p \< 0.05), la mesure de la taille de l'effet et la présentation visuelle des données. Les étapes nécessaires au recodage des variables ont déjà été exposées précédemment dans ce guide. La présentation visuelle des données se fera à partir du *Grammar of Graphics* utilisé par le package [ggplot2](https://en.wikipedia.org/wiki/Ggplot2).
+
+Pour tous les types de croisement, les étapes à suivre seront donc les mêmes :
+
+1. Recodage des variables
+2. Test de significativité (p \< 0.05)
+3. Mesure de taille de l'effet
+4. Présentation visuelle des données croisées
+
+Voici maintenat un tableau qui présente les différentes mesures de taille de l'effet et les bornes qui permettent de déterminer la force de la relation entre les deux variables. Ces bornes sont présentées pour les trois types de croisements principalement utilisés en science politique :
+
+1. Croisement entre deux variables qualitatives (catégorielles) ;
+2. croisement entre une variable qualitative et une variable quantitative ;
+3. croisement entre deux variables quantitatives.
+
+## *Mesures de taille de l'effet et leurs bornes associées*
+
+\*À noter ici que le tableau présente quatre type de croisement puisque le type de croisement qualitative-qualitative utilisera des mesures de taille de l'effet différentes selon si la variable qualitative est dichotomique (seulement deux valeurs possibles [1,0]) ou polytomique (plus de deux valeurs possibles [1,2,3,4...])
+
+|   Type de croisement   | Mesure de taille de l'effet | Petite  | Moyenne | Grande  |
+|:-------------:|:-----------------:|:-----------:|:-----------:|:-----------:|
+|     Quali + Quali      |         V de Cramer         |   0.1   |   0.3   |   0.5   |
+| Quali (dicho) + Quanti |         D de Cohen          |   0.2   |   0.5   |   0.8   |
+| Quali (poly) + Quanti  |       tau de Kendall        | (-) 0.1 | (-) 0.3 | (-) 0.5 |
+|    Quanti + Quanti     |        r de Pearson         | (-) 0.1 | (-) 0.3 | (-) 0.5 |
+
+## *Deux variables qualitatives*
+
+### Recodage
+
+Dans cet exemple, nous utiliserons les variables "sex.r" et "p.voted" pour vérifier s'il y a un lien entre le sexe et l'abstention électorale.
+
+Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section « Analyse univariée ».
+
+```{r quali_quali_recode}
+freq_sexe = SommaireQuali(base$sex.r, na.rm = FALSE)
+freq_vote = SommaireQuali(base$p.voted, na.rm = FALSE)
+
+base$sexe = recode(base$sex.r, '1="Homme" ; 2="Femme" ; else=NA')
+base$a_vote = recode(base$p.voted, '1="Oui" ; 2="Non" ; else=NA')
+```
+
+Après ces manipulation, la variable "a_vote" prend les valeurs "Oui" ou "Non", alors que la variable "sexe" prend les valeurs "Homme" ou "Femme".
+
+### Significativité et taille de l'effet
+
+La fonction QualiQuali() du package personnalisé permet de calculer la valeur du p, la valeur du V de Cramer (mesure de taille de l'effet associée à ce type de croisement) et de présenter les données visuellement sur un tableau croisé.
+
+La fonction renvoie une liste qui contient la valeur du p et le V de Cramer. Cette liste peut être sauvegardé dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+
+```{r p_V_quali_quali}
+p_V_sexe_vote = QualiQuali(base$sexe, base$a_vote)
+
+p = p_V_sexe_vote$p_value
+p
+
+v = p_V_sexe_vote$V_Cramer
+v
+```
+
+### Présentation visuelle
+
+Deux variables qualitatives à analyser peuvent être croisées à l'aide d'un tableau de contingence (ou tableau croisé). Ce tableau de contingence est composé de cellules qui contiennent chacune un nombre d'observations associées à une valeur de Y ET à une valeur de X.
+
+Pour avoir une plus grande pertinence analytique, ce nombre d'observation est généralement présenté en pourcentage, prenant comme total une valeur possible de la variable en colonnes ou une de la variable en rangées, selon la position de la variable de groupement (la variable indépendante)
+
+1. Il faut d'abord différencier les deux variables que nous traitons et ce qu'elles représentent.
+    - Quelle variable représente l'ensemble à analyser, la variable de groupement ? (la variable indépendante)
+    - Quelle variable représente la caractéristique à analyser en fonction de la variable de groupement ; ce qui mesure la différence que l'on souhaite observer entre les groupes ? (la variable dépendante)
+2. Il faut ensuite observer le tableau croisé et déterminer si la variable de groupement (variable indépendante) est placée en colonnes ou en rangées.
+    - Si la variable de groupement (variable indépendante) est placée en colonnes, on regardera le pourcentage de colonnes. (3e chiffre de la cellule)
+    - Si la variable de groupement (variable indépendante) est placée en rangées, on regardera le pourcentage de rangées. (2e chiffre de la cellule).
+
+Ce tableau de contingence a été produit automatiquement par la fonction précédente. Pour les présenter de manière esthétiquement appropriée pour votre rendu, il ne suffit qu'à créer un tableau manuellement dans Excel ou dans Word à partir des chiffres du tableau brut de RStudio.
+
+Pour reproduire manuellement le même tableau et le personnaliser d'avantage, il est possible d'utiliser directement la fonction CrossTable().
+
+```{r cross_table}
+CrossTable(base$a_vote, base$sexe,
+           prop.c = TRUE,
+           prop.r = FALSE,
+           prop.t=FALSE,
+           prop.chisq=FALSE,
+           format = "SPSS")
+```
+
+Il est aussi possible de présenter graphiquement les données d'un tableau croisé, bien que cette méthode de présentation ne soit pas toujours la plus appropriée. Il faut donc bien comprendre les données que nous désirons présenter et faire preuve de jugement. Dans cette exemple, la proportion d'hommes et de femmes qui ont voté et qui se sont abstenu est tellement similaire que les deux bandes sont presque identiques.
+
+```{r graph_bandes_supp}
+
+# Graphique à bandes superposées (ou bandes divisées)
+
+# Filtrer pour retirer les NAs
+data = filter(base, !is.na(sexe) & !is.na(a_vote))
+
+graph_sexe_vote = ggplot() +
+  geom_bar(data = data,
+           mapping = aes(x = sexe,
+                         fill = a_vote),
+           position = "fill",
+           color = "black") +
+  scale_fill_brewer(palette = "Greens") +
+  scale_y_continuous(breaks = seq(0, 1, .1),
+                     expand = expansion(mult = c(0, .05)),
+                     label = percent) +
+  labs(title = "Croisement entre deux variables qualitatives (sexe et vote)",
+       x = "Sexe",
+       y = "Proportion",
+       fill = "Vote") +
+  theme_defaut(couleur = "#018849",
+               grille = "h",
+               grille_top = FALSE)
+
+graph_sexe_vote
+
+```
+
+## *Une variable qualitative et une quantitative*
+
+### Variable qualitative dichotomique ([1,0];["Oui","Non"])
+
+#### Recodage
+
+Dans cet exemple, nous utiliserons les variables "sex.r" et "income" pour vérifier s'il y a un lien entre le sexe et le revenu.
+
+Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section « Analyse univariée ».
+
+\*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
+
+```{r quali_quanti_D_recode}
+freq_sexe = SommaireQuali(base$sex.r, na.rm = FALSE)
+freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
+
+base$sexe = recode(base$sex.r, '1="Homme" ; 2="Femme" ; else=NA')
+base$revenu = base$income
+base$revenu[base$revenu <= 5000 | base$revenu >= 250000] = NA
+```
+
+Après ces manipulation, la variable "revenu" est continue entre 5000 et 250000, alors que la variable "sexe" prend les valeurs "Homme" ou "Femme".
+
+#### Significativité et taille de l'effet
+
+Lorsque la variable qualitative est dichotomique, il faut utiliser le D de Cohen pour mesurer la différence entre les deux valeurs possible de la variable indépendante (X).
+
+La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du D de Cohen et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI).
+
+La fonction renvoie une liste qui contient la valeur du p et le D de Cohen. Cette liste peut être sauvegardé dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+
+```{r p_D_quali_quanti}
+p_D_sexe_revenu = QualiQuanti(base$sexe, base$revenu)
+
+p = p_D_sexe_revenu$p_value
+p
+
+D = p_D_sexe_revenu$D_Cohen
+D
+```
+
+#### Présentation visuelle
+
+Pour visualiser la différence entre les moyennes de plusieurs groupes distincts, on peut utiliser un graphique en violon ou un graphique en boîte à moustache.
+
+Le graphique en violon permet d'observer la densité d'observation sur l'échelle continue de la variable dépendante pour chaque groupe, alors que le graphique en boîte à moustache montre principalement l'emplacement de la médiane (trait le plus au centre) et des quartiles inférieur et supérieur à celle-ci (ceux qui coupent l'échantillon à 25% et 75%). Ces deux mesures sont représentées par les bornes inférieures et supérieure de la "boîte" du graphique en boîte à moustache.
+
+Il est possible de faire apparaître un seul graphique qui présente les deux de manière superposée avec le bloc de code suivant.
+
+```{r graph_violon_box}
+# Graphique en violons + boîtes à moustaches
+data = filter(base, !is.na(sexe) & !is.na(revenu))
+
+violin_box = ggplot() +
+  geom_violin(data = data,
+              mapping = aes(x = sexe, y = revenu),
+              fill = "#018849",
+              color = "black") +
+  geom_boxplot(data = data,
+               aes(x = sexe, y = revenu),
+               width = 0.2,
+               notch = TRUE,
+               fill = "#01FA85",
+               outlier.color = "#01FA85",
+               outlier.size = 2) +
+  scale_y_continuous(breaks = seq(0,350000,25000),
+                     expand = expansion(mult = c(0, .05)),
+                     labels = dollar_format()) +
+  labs(title = "Croisement entre une variable qualitative et une quantitative",
+       x = "Sexe",
+       y = "Salaire annuel") +
+  theme_defaut(couleur = "#018849",
+               grille = "h",
+               grille_top = TRUE)
+
+violin_box
+
+```
+
+### Variable qualitative polytomique non-ordonnée ("Jaune","Bleu","Rouge", etc.)
+
+### Variable qualitative polytomique ordonnée ("Élevé","Moyen","Faible", etc.)
+
+## *Deux variables quantitatives*
