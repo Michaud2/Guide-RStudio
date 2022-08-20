@@ -374,7 +374,7 @@ graph_sexe_vote
 
 ```
 
-## *Une variable indépendante qualitative et une dépendante quantitative*
+## *Une variable qualitative et une quantitative*
 
 ### Variable indépendante qualitative dichotomique ([1,0];["Oui","Non"])
 
