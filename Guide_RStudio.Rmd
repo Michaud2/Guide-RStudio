@@ -31,7 +31,7 @@ h1.title {
 h1 { /* Header 1 */
   font-size: 28px;
   font-family: "Arial";
-  color: Yellow;
+  color: Green;
 }
 h2 { /* Header 2 */
     font-size: 22px;
