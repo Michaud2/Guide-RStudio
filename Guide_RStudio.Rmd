@@ -305,7 +305,7 @@ Après ces manipulation, la variable "a_vote" prend les valeurs "Oui" ou "Non", 
 
 La fonction QualiQuali() du package personnalisé permet de calculer la valeur du p, la valeur du V de Cramer (mesure de taille de l'effet associée à ce type de croisement) et de présenter les données visuellement sur un tableau croisé.
 
-La fonction renvoie une liste qui contient la valeur du p et le V de Cramer. Cette liste peut être sauvegardé dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+La fonction renvoie une liste qui contient la valeur du p et le V de Cramer. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
 
 ```{r p_V_quali_quali}
 p_V_sexe_vote = QualiQuali(base$sexe, base$a_vote)
@@ -403,7 +403,7 @@ Lorsque la variable qualitative est dichotomique, il faut utiliser le D de Cohen
 
 La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du D de Cohen et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI).
 
-La fonction renvoie une liste qui contient la valeur du p et le D de Cohen. Cette liste peut être sauvegardé dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+La fonction renvoie une liste qui contient la valeur du p et le D de Cohen. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
 
 ```{r p_D_quali_quanti}
 p_D_sexe_revenu = QualiQuanti(base$sexe, base$revenu)
@@ -488,7 +488,7 @@ Lorsque la variable indépendante qualitative est polytomique non-ordonnée, il 
 
 La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI). En plus de cela, la fonction calcule automatiquement toutes les combinaisons possibles de comparaisons de moyennes entre deux groupes. Elle affiche ce résultat sous forme d'un grand tableau
 
-La fonction renvoie une liste qui contient uniquement la valeur du p. Ce résultat sous forme de liste peut être sauvegardé dans un nouvelle objet accessible à l'aide du signe de dollar (\$).
+La fonction renvoie une liste qui contient uniquement la valeur du p. Ce résultat sous forme de liste peut être sauvegardée dans un nouvelle objet accessible à l'aide du signe de dollar (\$).
 
 ```{r p_quali_quanti}
 p_provinces_revenu = QualiQuanti(base$provinces, base$revenu)
@@ -566,7 +566,7 @@ Lorsque la variable indépendante qualitative est polytomique ordonnée, il faut
 
 La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du Tau de Kendall et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI).
 
-La fonction renvoie une liste qui contient la valeur du p et le Tau de Kendall. Cette liste peut être sauvegardé dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+La fonction renvoie une liste qui contient la valeur du p et le Tau de Kendall. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
 
 ```{r p_T_quali_quanti}
 p_Tau_polint_revenu = QualiQuanti(base$polint, base$revenu, Y_ord = TRUE)
@@ -622,7 +622,76 @@ Puisque  les  données  quantitatives  possèdent  généralement  un  nombre  p
 
 ### Recodage
 
+Avant de croiser deux variables quantitatives entre elles, il est de mise d'effectuer un traitement des données sélectionnées afin de ne conserver que les valeurs désirées. Croisons maintenant les variables « age » et « feel.musl » en recodant la variable « age » en âge réel plutôt qu'en année de naissance, et en retirant les personnes qui ont répondu « 1000 » à la question sur l'âge et sur l'échelle de 0 à 100 pour l'appréciation des personnes musulmanes.
+
+```{r quanti_quanti_r_recode}
+
+freq_age = SommaireQuanti(base$age, na.rm = TRUE)
+freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
+
+base$age[base$age == 1000] = NA
+base$age = 2015 - base$age
+
+base$revenu = base$income
+base$revenu[base$revenu <= 5000 | base$revenu >= 250000] = NA
+```
+
 ### Significativité et taille de l'effet
+
+Pour un croisement entre deux variables quantitatives, on doit mesurer la relation à l'aide du coefficient de corrélation (r de Pearson) et du coefficient de corrélation (R2 ou R carré) afin de vérifier si les deux variables varient significativement de manière proportionnelle ou inversement proportionnelle.
+
+La fonction QuantiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du r de Pearson et celle du R carré, en plus de l'analyse du modèle de régression linéaire. La fonction finie par présenter un graphique rudimentaire de la relation entre les deux variables qui inclue la droite de régression et son équation.
+
+La fonction renvoie une liste qui contient la valeur du p, le r de Pearson et le R2. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+
+```{r p_r_r2_quanti_quanti}
+p_r_r2_age_revenu = QuantiQuanti(base$age, base$revenu)
+
+p_r_r2_age_revenu$p_value
+p_r_r2_age_revenu$r_Pearson
+p_r_r2_age_revenu$R2
+```
 
 ### Présentation visuelle
 
+Pour un croisement entre deux variables quantitatives, les données doivent être présentées sur ungraphique par un nuage de points des valeurs réelles et une droite de régression qui offre un aperçudes  valeurs  estimées  par  le  modèle.
+
+```{r graph_nuage_points}
+# Graphique en nuage de points avec droite de régression et équation
+data = filter(base, !is.na(age) & !is.na(revenu))
+
+nuage = ggplot() +
+    geom_point(data = data,
+               mapping = aes(x = age, y = revenu),
+               stat = "identity",
+               shape = 19,
+               color = "#018849") +
+    geom_smooth(data = data,
+                mapping = aes(x = age, y = revenu),
+                method = "lm",
+                formula = y ~ x, # y ~ poly(x, 2) --> permet une formule quadratique
+                se = TRUE, # FALSE enlève la zone d'erreur
+                color = "blue") +
+  geom_label_repel(x = max(data$age)*0.9,
+                   y = max(data$revenu)*0.9,
+                   mapping = aes(label = lm_eq(data$age,data$revenu)),
+                   box.padding   = 0.5, 
+                   point.padding = 0.5,
+                   fill = "#018849",
+                   color = "white",
+                   vjust = "inward",
+                   hjust = "inward",
+                   parse = TRUE) +
+    scale_x_continuous(breaks = seq(18,115,10),
+                       expand = expansion(mult = c(0, 0))) +
+    scale_y_continuous(breaks = seq(0,350000,25000),
+                       labels = dollar_format(),
+                       expand = expansion(mult = c(0, 0))) +
+    labs(title = "Croisement entre deux variables quantitatives",
+         x = "Âge",
+         y = "Salaire annuel") +
+    theme_defaut(couleur = "#018849",
+                 grille = "hv",
+                 grille_top = FALSE)
+nuage
+```
