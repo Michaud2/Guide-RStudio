@@ -429,11 +429,11 @@ data = filter(base, !is.na(sexe) & !is.na(revenu))
 
 violin_box = ggplot() +
   geom_violin(data = data,
-              mapping = aes(x = sexe, y = revenu),
+              mapping = aes(x = sexe, y = revenu, group = sexe),
               fill = "#018849",
               color = "black") +
   geom_boxplot(data = data,
-               aes(x = sexe, y = revenu),
+               aes(x = sexe, y = revenu, group = sexe),
                width = 0.2,
                notch = TRUE,
                fill = "#01FA85",
@@ -514,11 +514,11 @@ data = filter(base, !is.na(provinces) & !is.na(revenu))
 
 violin_box = ggplot() +
   geom_violin(data = data,
-              mapping = aes(x = provinces, y = revenu),
+              mapping = aes(x = provinces, y = revenu, group = provinces),
               fill = "#018849",
               color = "black") +
   geom_boxplot(data = data,
-               aes(x = provinces, y = revenu),
+               aes(x = provinces, y = revenu, group = provinces),
                width = 0.2,
                notch = TRUE,
                fill = "#01FA85",
@@ -541,4 +541,88 @@ violin_box
 
 ### Variable indépendante qualitative polytomique ordonnée ("Élevé","Moyen","Faible", etc.)
 
+#### Recodage
+
+Dans cet exemple, nous utiliserons les variables "p.intpol" et "income" pour vérifier s'il y a un lien entre l'intérêt pour la politique et le revenu.
+
+Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section [Analyse univariée][univar].
+
+\*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
+
+```{r quali_quanti_T_recode}
+freq_interet = SommaireQuali(base$p.intpol, na.rm = TRUE)
+freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
+
+base$polint = recode(base$p.intpol, "c(1,2,3)=1 ; c(4,5)=2 ;c(6,7)=3 ; c(8,9,10)=4 ; else=NA")
+base$revenu = base$income
+base$revenu[base$revenu <= 5000 | base$revenu >= 250000] = NA
+```
+
+Après ces manipulation, la variable "revenu" est continue entre 5000 et 250000, alors que la variable "polint" prend les valeurs suivantes: 1 pour "Très faible", 2 pour "Faible", 3 pour "Fort" ou 4 pour "Très fort".
+
+#### Significativité et taille de l'effet
+
+Lorsque la variable indépendante qualitative est polytomique ordonnée, il faut utiliser le Tau de Kendall pour mesurer la différence entre les valeurs possible de la variable indépendante (X).
+
+La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du Tau de Kendall et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI).
+
+La fonction renvoie une liste qui contient la valeur du p et le Tau de Kendall. Cette liste peut être sauvegardé dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+
+```{r p_T_quali_quanti}
+p_Tau_polint_revenu = QualiQuanti(base$polint, base$revenu, Y_ord = TRUE)
+
+p = p_Tau_polint_revenu$p_value
+p
+
+Tau = p_Tau_polint_revenu$tau_Kendall
+Tau
+```
+
+#### Présentation visuelle
+
+Pour visualiser la différence entre les moyennes de plusieurs groupes distincts, on peut utiliser un graphique en violon (ou graphique en boîte à moustaches).
+
+Le graphique en violon permet d'observer la densité d'observation sur l'échelle continue de la variable dépendante pour chaque groupe, alors que le graphique en boîte à moustache montre principalement l'emplacement de la médiane (trait le plus au centre) et des quartiles inférieur et supérieur à celle-ci (ceux qui coupent l'échantillon à 25% et 75%). Ces deux mesures sont représentées par les bornes inférieures et supérieure de la "boîte" du graphique en boîte à moustache.
+
+Il est possible de faire apparaître un seul graphique qui présente les deux de manière superposée avec le bloc de code suivant.
+
+```{r graph_violon_box_3}
+# Graphique en violons + boîtes à moustaches
+data = filter(base, !is.na(polint) & !is.na(revenu))
+
+violin_box = ggplot() +
+  geom_violin(data = data,
+              mapping = aes(x = polint, y = revenu, group = polint),
+              fill = "#018849",
+              color = "black") +
+  geom_boxplot(data = data,
+               aes(x = polint, y = revenu, group=polint),
+               width = 0.2,
+               notch = TRUE,
+               fill = "#01FA85",
+               outlier.color = "#01FA85",
+               outlier.size = 2) +
+  scale_y_continuous(breaks = seq(0,350000,25000),
+                     expand = expansion(mult = c(0, .05)),
+                     labels = dollar_format()) +
+  labs(title = "Croisement entre une variable qualitative et une quantitative",
+       x = "polint",
+       y = "Salaire annuel") +
+  theme_defaut(couleur = "#018849",
+               grille = "h",
+               grille_top = TRUE)
+
+violin_box
+
+```
+
 ## *Deux variables quantitatives*
+
+Puisque  les  données  quantitatives  possèdent  généralement  un  nombre  presque  infini  de  valeurspossibles, leur traitement diverge légèrement de celui des variables qualitatives. Il est, par exemple,impossible  d'effectuer  un  tableau  ou  un  tableau  croisé  avec  des  données  quantitatives,  puisqueceux-ci contiendraient un nombre ridiculement grand de colonnes et de rangées. Nous allons plutôteffectuer les étapes suivantes pour les données quantitatives.
+
+### Recodage
+
+### Significativité et taille de l'effet
+
+### Présentation visuelle
+
