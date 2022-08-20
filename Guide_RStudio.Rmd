@@ -227,7 +227,7 @@ base_femmes = filter(base, sex.r == 2)
 base_femmes
 ```
 
-# **L'ANALYSE UNIVARIÉE**
+# **L'ANALYSE UNIVARIÉE** {univar}
 
 ## *Variable qualitative*
 
@@ -289,7 +289,7 @@ Voici maintenat un tableau qui présente les différentes mesures de taille de l
 
 Dans cet exemple, nous utiliserons les variables "sex.r" et "p.voted" pour vérifier s'il y a un lien entre le sexe et l'abstention électorale.
 
-Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section « Analyse univariée ».
+Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section [Analyse univariée][univar].
 
 ```{r quali_quali_recode}
 freq_sexe = SommaireQuali(base$sex.r, na.rm = FALSE)
@@ -305,7 +305,7 @@ Après ces manipulation, la variable "a_vote" prend les valeurs "Oui" ou "Non", 
 
 La fonction QualiQuali() du package personnalisé permet de calculer la valeur du p, la valeur du V de Cramer (mesure de taille de l'effet associée à ce type de croisement) et de présenter les données visuellement sur un tableau croisé.
 
-La fonction renvoie une liste qui contient la valeur du p et le V de Cramer. Cette liste peut être sauvegardé dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+La fonction renvoie une liste qui contient la valeur du p et le V de Cramer. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
 
 ```{r p_V_quali_quali}
 p_V_sexe_vote = QualiQuali(base$sexe, base$a_vote)
@@ -374,20 +374,20 @@ graph_sexe_vote
 
 ```
 
-## *Une variable qualitative et une quantitative*
+## *Une variable indépendante qualitative et une dépendante quantitative*
 
-### Variable qualitative dichotomique ([1,0];["Oui","Non"])
+### Variable indépendante qualitative dichotomique ([1,0];["Oui","Non"])
 
 #### Recodage
 
 Dans cet exemple, nous utiliserons les variables "sex.r" et "income" pour vérifier s'il y a un lien entre le sexe et le revenu.
 
-Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section « Analyse univariée ».
+Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section [Analyse univariée][univar].
 
 \*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
 
 ```{r quali_quanti_D_recode}
-freq_sexe = SommaireQuali(base$sex.r, na.rm = FALSE)
+freq_sexe = SommaireQuali(base$sex.r, na.rm = TRUE)
 freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
 
 base$sexe = recode(base$sex.r, '1="Homme" ; 2="Femme" ; else=NA')
@@ -403,7 +403,7 @@ Lorsque la variable qualitative est dichotomique, il faut utiliser le D de Cohen
 
 La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du D de Cohen et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI).
 
-La fonction renvoie une liste qui contient la valeur du p et le D de Cohen. Cette liste peut être sauvegardé dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+La fonction renvoie une liste qui contient la valeur du p et le D de Cohen. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
 
 ```{r p_D_quali_quanti}
 p_D_sexe_revenu = QualiQuanti(base$sexe, base$revenu)
@@ -417,23 +417,23 @@ D
 
 #### Présentation visuelle
 
-Pour visualiser la différence entre les moyennes de plusieurs groupes distincts, on peut utiliser un graphique en violon ou un graphique en boîte à moustache.
+Pour visualiser la différence entre les moyennes de plusieurs groupes distincts, on peut utiliser un graphique en violon (ou graphique en boîte à moustaches).
 
 Le graphique en violon permet d'observer la densité d'observation sur l'échelle continue de la variable dépendante pour chaque groupe, alors que le graphique en boîte à moustache montre principalement l'emplacement de la médiane (trait le plus au centre) et des quartiles inférieur et supérieur à celle-ci (ceux qui coupent l'échantillon à 25% et 75%). Ces deux mesures sont représentées par les bornes inférieures et supérieure de la "boîte" du graphique en boîte à moustache.
 
 Il est possible de faire apparaître un seul graphique qui présente les deux de manière superposée avec le bloc de code suivant.
 
-```{r graph_violon_box}
+```{r graph_violon_box_1}
 # Graphique en violons + boîtes à moustaches
 data = filter(base, !is.na(sexe) & !is.na(revenu))
 
 violin_box = ggplot() +
   geom_violin(data = data,
-              mapping = aes(x = sexe, y = revenu),
+              mapping = aes(x = sexe, y = revenu, group = sexe),
               fill = "#018849",
               color = "black") +
   geom_boxplot(data = data,
-               aes(x = sexe, y = revenu),
+               aes(x = sexe, y = revenu, group = sexe),
                width = 0.2,
                notch = TRUE,
                fill = "#01FA85",
@@ -453,8 +453,245 @@ violin_box
 
 ```
 
-### Variable qualitative polytomique non-ordonnée ("Jaune","Bleu","Rouge", etc.)
+### Variable indépendante qualitative polytomique non-ordonnée ("Jaune","Bleu","Rouge", etc.)
 
-### Variable qualitative polytomique ordonnée ("Élevé","Moyen","Faible", etc.)
+#### Recodage
+
+Pour cet exemple de croisement bivarié, nous utiliserons les variables "provinces" et "income" pour vérifier s'il y a un lien entre la province de résidence et le revenu.
+
+Comme d'habitude, il faut vérifier les valeurs possibles des variables afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section [Analyse univariée][univar].
+
+\*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
+
+```{r quali_quanti_ANOVA_recode}
+freq_provinces = SommaireQuali(base$province, na.rm = FALSE)
+freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
+
+base$provinces = recode(base$province, '1="Alberta" ;
+                            2="Colombie-Britannique" ;
+                            3="Manitoba" ;
+                            c(4,5,7,10)="Maritimes" ;
+                            c(6,8,13)="Territoires" ;
+                            9="Ontario" ;
+                            11="Québec" ;
+                            12="Saskatchewan" ;
+                            else=NA')
+base$revenu = base$income
+base$revenu[base$revenu <= 5000 | base$revenu >= 250000] = NA
+```
+
+Après ces manipulation, la variable "revenu" est continue entre 5000 et 250000, alors que la variable "provinces" prend les valeurs de chaque provinces, en regroupant les maritimes et les territoires.
+
+#### Significativité et taille de l'effet
+
+Lorsque la variable indépendante qualitative est polytomique non-ordonnée, il faut comparer les différents groupes à l'aide d'une analyse de la variance (ANOVA). L'ANOVA nécessite des tests d'hypothèses plus approfondis pour arriver à offrir un équivalent de la mesure de la taille de l'effet. L'ANOVA, en elle-même, ne fait qu'informer s'il existe au moins seule différence significative entre deux valeurs possibles de la variable indépendante (X), sans toutefois identifier quels groupes sont concernés.
+
+La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI). En plus de cela, la fonction calcule automatiquement toutes les combinaisons possibles de comparaisons de moyennes entre deux groupes. Elle affiche ce résultat sous forme d'un grand tableau
+
+La fonction renvoie une liste qui contient uniquement la valeur du p. Ce résultat sous forme de liste peut être sauvegardée dans un nouvelle objet accessible à l'aide du signe de dollar (\$).
+
+```{r p_quali_quanti}
+p_provinces_revenu = QualiQuanti(base$provinces, base$revenu)
+
+p = p_provinces_revenu$p_value
+p
+
+```
+
+#### Présentation visuelle
+
+Pour visualiser la différence entre les moyennes de plusieurs groupes distincts, on peut utiliser un graphique en violon (ou graphique en boîte à moustaches).
+
+Le graphique en violon permet d'observer la densité d'observation sur l'échelle continue de la variable dépendante pour chaque groupe, alors que le graphique en boîte à moustache montre principalement l'emplacement de la médiane (trait le plus au centre) et des quartiles inférieur et supérieur à celle-ci (ceux qui coupent l'échantillon à 25% et 75%). Ces deux mesures sont représentées par les bornes inférieures et supérieure de la "boîte" du graphique en boîte à moustache.
+
+Il est possible de faire apparaître un seul graphique qui présente les deux de manière superposée avec le bloc de code suivant.
+
+Ce graphique n'est toutefois pas toujours ajusté adéquatement à l'horizontal, surtout lorsqu'il y a trop de valeurs possibles de X. On peut alors inverser les axes en ajoutant "+ coord_flip()" juste avant l'argument "theme_defaut()" et/ou insérer "+ theme(axis.text.x = element_text(angle = 45, hjust = 1))" juste après celui-ci.
+
+```{r graph_violon_box_2}
+# Graphique en violons + boîtes à moustaches
+data = filter(base, !is.na(provinces) & !is.na(revenu))
+
+violin_box = ggplot() +
+  geom_violin(data = data,
+              mapping = aes(x = provinces, y = revenu, group = provinces),
+              fill = "#018849",
+              color = "black") +
+  geom_boxplot(data = data,
+               aes(x = provinces, y = revenu, group = provinces),
+               width = 0.2,
+               notch = TRUE,
+               fill = "#01FA85",
+               outlier.color = "#01FA85",
+               outlier.size = 2) +
+  scale_y_continuous(breaks = seq(0,350000,25000),
+                     expand = expansion(mult = c(0, .05)),
+                     labels = dollar_format()) +
+  labs(title = "Croisement entre une variable qualitative et une quantitative",
+       x = "provinces",
+       y = "Salaire annuel") +
+  theme_defaut(couleur = "#018849",
+               grille = "h",
+               grille_top = TRUE)+
+  theme(axis.text.x = element_text(angle = 20, hjust = 0.9))
+
+violin_box
+
+```
+
+### Variable indépendante qualitative polytomique ordonnée ("Élevé","Moyen","Faible", etc.)
+
+#### Recodage
+
+Dans cet exemple, nous utiliserons les variables "p.intpol" et "income" pour vérifier s'il y a un lien entre l'intérêt pour la politique et le revenu.
+
+Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section [Analyse univariée][univar].
+
+\*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
+
+```{r quali_quanti_T_recode}
+freq_interet = SommaireQuali(base$p.intpol, na.rm = TRUE)
+freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
+
+base$polint = recode(base$p.intpol, "c(1,2,3)=1 ; c(4,5)=2 ;c(6,7)=3 ; c(8,9,10)=4 ; else=NA")
+base$revenu = base$income
+base$revenu[base$revenu <= 5000 | base$revenu >= 250000] = NA
+```
+
+Après ces manipulation, la variable "revenu" est continue entre 5000 et 250000, alors que la variable "polint" prend les valeurs suivantes: 1 pour "Très faible", 2 pour "Faible", 3 pour "Fort" ou 4 pour "Très fort".
+
+#### Significativité et taille de l'effet
+
+Lorsque la variable indépendante qualitative est polytomique ordonnée, il faut utiliser le Tau de Kendall pour mesurer la différence entre les valeurs possible de la variable indépendante (X).
+
+La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du Tau de Kendall et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI).
+
+La fonction renvoie une liste qui contient la valeur du p et le Tau de Kendall. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+
+```{r p_T_quali_quanti}
+p_Tau_polint_revenu = QualiQuanti(base$polint, base$revenu, Y_ord = TRUE)
+
+p = p_Tau_polint_revenu$p_value
+p
+
+Tau = p_Tau_polint_revenu$tau_Kendall
+Tau
+```
+
+#### Présentation visuelle
+
+Pour visualiser la différence entre les moyennes de plusieurs groupes distincts, on peut utiliser un graphique en violon (ou graphique en boîte à moustaches).
+
+Le graphique en violon permet d'observer la densité d'observation sur l'échelle continue de la variable dépendante pour chaque groupe, alors que le graphique en boîte à moustache montre principalement l'emplacement de la médiane (trait le plus au centre) et des quartiles inférieur et supérieur à celle-ci (ceux qui coupent l'échantillon à 25% et 75%). Ces deux mesures sont représentées par les bornes inférieures et supérieure de la "boîte" du graphique en boîte à moustache.
+
+Il est possible de faire apparaître un seul graphique qui présente les deux de manière superposée avec le bloc de code suivant.
+
+```{r graph_violon_box_3}
+# Graphique en violons + boîtes à moustaches
+data = filter(base, !is.na(polint) & !is.na(revenu))
+
+violin_box = ggplot() +
+  geom_violin(data = data,
+              mapping = aes(x = polint, y = revenu, group = polint),
+              fill = "#018849",
+              color = "black") +
+  geom_boxplot(data = data,
+               aes(x = polint, y = revenu, group=polint),
+               width = 0.2,
+               notch = TRUE,
+               fill = "#01FA85",
+               outlier.color = "#01FA85",
+               outlier.size = 2) +
+  scale_y_continuous(breaks = seq(0,350000,25000),
+                     expand = expansion(mult = c(0, .05)),
+                     labels = dollar_format()) +
+  labs(title = "Croisement entre une variable qualitative et une quantitative",
+       x = "polint",
+       y = "Salaire annuel") +
+  theme_defaut(couleur = "#018849",
+               grille = "h",
+               grille_top = TRUE)
+
+violin_box
+
+```
 
 ## *Deux variables quantitatives*
+
+Puisque  les  données  quantitatives  possèdent  généralement  un  nombre  presque  infini  de  valeurspossibles, leur traitement diverge légèrement de celui des variables qualitatives. Il est, par exemple,impossible  d'effectuer  un  tableau  ou  un  tableau  croisé  avec  des  données  quantitatives,  puisqueceux-ci contiendraient un nombre ridiculement grand de colonnes et de rangées. Nous allons plutôteffectuer les étapes suivantes pour les données quantitatives.
+
+### Recodage
+
+Avant de croiser deux variables quantitatives entre elles, il est de mise d'effectuer un traitement des données sélectionnées afin de ne conserver que les valeurs désirées. Croisons maintenant les variables « age » et « feel.musl » en recodant la variable « age » en âge réel plutôt qu'en année de naissance, et en retirant les personnes qui ont répondu « 1000 » à la question sur l'âge et sur l'échelle de 0 à 100 pour l'appréciation des personnes musulmanes.
+
+```{r quanti_quanti_r_recode}
+
+freq_age = SommaireQuanti(base$age, na.rm = TRUE)
+freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
+
+base$age[base$age == 1000] = NA
+base$age = 2015 - base$age
+
+base$revenu = base$income
+base$revenu[base$revenu <= 5000 | base$revenu >= 250000] = NA
+```
+
+### Significativité et taille de l'effet
+
+Pour un croisement entre deux variables quantitatives, on doit mesurer la relation à l'aide du coefficient de corrélation (r de Pearson) et du coefficient de corrélation (R2 ou R carré) afin de vérifier si les deux variables varient significativement de manière proportionnelle ou inversement proportionnelle.
+
+La fonction QuantiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du r de Pearson et celle du R carré, en plus de l'analyse du modèle de régression linéaire. La fonction finie par présenter un graphique rudimentaire de la relation entre les deux variables qui inclue la droite de régression et son équation.
+
+La fonction renvoie une liste qui contient la valeur du p, le r de Pearson et le R2. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
+
+```{r p_r_r2_quanti_quanti}
+p_r_r2_age_revenu = QuantiQuanti(base$age, base$revenu)
+
+p_r_r2_age_revenu$p_value
+p_r_r2_age_revenu$r_Pearson
+p_r_r2_age_revenu$R2
+```
+
+### Présentation visuelle
+
+Pour un croisement entre deux variables quantitatives, les données doivent être présentées sur ungraphique par un nuage de points des valeurs réelles et une droite de régression qui offre un aperçudes  valeurs  estimées  par  le  modèle.
+
+```{r graph_nuage_points}
+# Graphique en nuage de points avec droite de régression et équation
+data = filter(base, !is.na(age) & !is.na(revenu))
+
+nuage = ggplot() +
+    geom_point(data = data,
+               mapping = aes(x = age, y = revenu),
+               stat = "identity",
+               shape = 19,
+               color = "#018849") +
+    geom_smooth(data = data,
+                mapping = aes(x = age, y = revenu),
+                method = "lm",
+                formula = y ~ x, # y ~ poly(x, 2) --> permet une formule quadratique
+                se = TRUE, # FALSE enlève la zone d'erreur
+                color = "blue") +
+  geom_label_repel(x = max(data$age)*0.9,
+                   y = max(data$revenu)*0.9,
+                   mapping = aes(label = lm_eq(data$age,data$revenu)),
+                   box.padding   = 0.5, 
+                   point.padding = 0.5,
+                   fill = "#018849",
+                   color = "white",
+                   vjust = "inward",
+                   hjust = "inward",
+                   parse = TRUE) +
+    scale_x_continuous(breaks = seq(18,115,10),
+                       expand = expansion(mult = c(0, 0))) +
+    scale_y_continuous(breaks = seq(0,350000,25000),
+                       labels = dollar_format(),
+                       expand = expansion(mult = c(0, 0))) +
+    labs(title = "Croisement entre deux variables quantitatives",
+         x = "Âge",
+         y = "Salaire annuel") +
+    theme_defaut(couleur = "#018849",
+                 grille = "hv",
+                 grille_top = FALSE)
+nuage
+```
