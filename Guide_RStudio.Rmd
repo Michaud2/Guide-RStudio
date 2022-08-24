@@ -3,7 +3,7 @@ title: "Guide d'introduction à l'utilisation de RStudio"
 author: "Alexandre Michel"
 date: "`r Sys.Date()`"
 output:
-  github_document:
+  html_document:
     toc: yes
     df_print: paged
 params:
@@ -71,11 +71,19 @@ readfichier = function()
 }
 fichier = as.character(readfichier())
 
+library("devtools")
+library("EPA")
+
+showtext::showtext_opts(dpi = 215)
+
+base = read.csv2(fichier, header = TRUE, encoding = "UTF-8")
+base = as_tibble(base)
+
 # echo = FALSE --> Le code n'apparait pas sur le fichier HTML produit
 # results = "hide" --> Le résultat du code n'apparaitra pas sur le fichier HTML produit
 ```
 
-# **Installation et activation des packages**
+# **INSTALLATION ET ACTIVATION DES PACKAGES**
 
 Voici comment installer et activer le [package personnalisé](https://github.com/Michaud2/Package-R-EPA) que j'ai moi-même créé en parallèle à ce guide :
 
@@ -86,26 +94,17 @@ install_github("Michaud2/Package-R-EPA")
 library("EPA")
 ```
 
-```{r EPA, echo = FALSE, results='hide'}
-library("devtools")
-library("EPA")
-```
-
 # **IMPORTATION D'UNE BASE DE DONNÉES**
 
 L'importation d'une base de données se fait de la manière la plus facile à l'aide de la fonction Importer() qui provient du package personnalisé. La fonction vous guide dans l'importation de la base en posant quelques questions simples à répondre directement dans la console.
 
-Pour suivre les exemples qui seront présentés dans ce guide, vous pouvez importer la base de données en format .csv qui est hébergée sur ce lien en le copiant et en le collant (SANS GUILLEMETS) lorsque ce sera demandé : <https://dimension.usherbrooke.ca/donnees/base2015CES.csv>
-
-```{r base_CACHE, include = FALSE}
-
-base = read.csv2(fichier, header = TRUE, encoding = "UTF-8")
-base = as_tibble(base)
-```
+Pour suivre les exemples qui seront présentés dans ce guide, vous pouvez importer la base de données en format *.csv français* qui est hébergée sur le lien suivant en faisant un copier coller (SANS GUILLEMETS) dans la console lorsque ce sera demandé, ou en l'ajoutant directement comme valeur de l'argument data : <https://dimension.usherbrooke.ca/donnees/base2015CES.csv>
 
 ```{r base, eval = FALSE}
 
 base = Importer()
+# OU
+base = Importer(data = "https://dimension.usherbrooke.ca/donnees/base2015CES.csv")
 ```
 
 # **MANIPULATIONS SUR UNE BASE DE DONNÉES**
@@ -136,7 +135,7 @@ Il est important de bien comprendre ce que chaque observation (rangée) signifie
 
 ### Variables
 
-Il est aussi primordial de comprendre de quoi est constituée chaque colonne de la base de données. Chaque colonne étant une variable, elle est mesurée par un indicateur précis qui n'est parfois pas codé de manière intuitive. C'est pourquoi il est nécessaire de ce référer constamment au **codebook** relié à la base de données. Il s'agit de notre bible lorsque l'on travaille avec des données complexes. Chaque base de données devrait venir avec un codebook lors de son téléchargement pour être capable de bien la lire.
+Il est aussi primordial de comprendre de quoi est constituée chaque colonne de la base de données. Chaque colonne étant une variable, elle est mesurée par un indicateur précis qui n'est parfois pas codé de manière intuitive. C'est pourquoi il est nécessaire de ce référer constamment au **codebook** qui fait le lien entre le codage des données dans R et ce qu'elles représentent de manière qualitative. Il s'agit de notre bible lorsque l'on travaille avec des données complexes. Chaque base de données devrait venir avec un codebook lors de son téléchargement pour être capable de bien comprendre ce que représente chacune des valeurs possibles des variables que nous analyserons. Par exemple, les valeurs possibles à une question du genre "Quelle province du Canada habitez-vous?" pourrait être des chiffres de 1 à 13. Mais qu'est-ce que signifie la réponse 12 à cette question? Il faudra aller voir dans le codebook pour trouver à quelle province correspond cette valeur.
 
 ## *Renommer des variables (colonnes)*
 
@@ -227,7 +226,7 @@ base_femmes = filter(base, sex.r == 2)
 base_femmes
 ```
 
-# **L'ANALYSE UNIVARIÉE** {univar}
+# **L'ANALYSE UNIVARIÉE**
 
 ## *Variable qualitative*
 
@@ -289,7 +288,7 @@ Voici maintenat un tableau qui présente les différentes mesures de taille de l
 
 Dans cet exemple, nous utiliserons les variables "sex.r" et "p.voted" pour vérifier s'il y a un lien entre le sexe et l'abstention électorale.
 
-Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section [Analyse univariée][univar].
+Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section sur l'analyse univariée.
 
 ```{r quali_quali_recode}
 freq_sexe = SommaireQuali(base$sex.r, na.rm = FALSE)
@@ -382,7 +381,7 @@ graph_sexe_vote
 
 Dans cet exemple, nous utiliserons les variables "sex.r" et "income" pour vérifier s'il y a un lien entre le sexe et le revenu.
 
-Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section [Analyse univariée][univar].
+Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section l'analyse univariée.
 
 \*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
 
@@ -459,7 +458,7 @@ violin_box
 
 Pour cet exemple de croisement bivarié, nous utiliserons les variables "provinces" et "income" pour vérifier s'il y a un lien entre la province de résidence et le revenu.
 
-Comme d'habitude, il faut vérifier les valeurs possibles des variables afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section [Analyse univariée][univar].
+Comme d'habitude, il faut vérifier les valeurs possibles des variables afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section l'analyse univariée.
 
 \*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
 
@@ -545,7 +544,7 @@ violin_box
 
 Dans cet exemple, nous utiliserons les variables "p.intpol" et "income" pour vérifier s'il y a un lien entre l'intérêt pour la politique et le revenu.
 
-Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section [Analyse univariée][univar].
+Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section l'analyse univariée.
 
 \*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
 
