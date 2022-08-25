@@ -113,9 +113,9 @@ base = Importer(data = "https://dimension.usherbrooke.ca/donnees/base2015CES.csv
 
 Dans une base de données, chaque colonne devrait être une variable (ou champ) et chaque rangée devrait être une observation (ou unité d'analyse). Certaines bases ne sont pas naturellement structurées de cette manière, nous verrons quelques manipulations qui permettent de bien formater une base de données dans cette section.
 
-Pour l'instant, il est possible de la faire apparaître en exécutant uniquement le nom de la base de données ou bien en cliquant sur son nom dans la fenêtre « Environment » de RStudio qui se situe en haut à droite.
+Pour l'instant, il est possible de visualiser une base de données (ou un objet de type "dataframe" dans R) en exécutant uniquement le nom de la base de données, ou bien en cliquant sur son nom dans la fenêtre « Environment » de RStudio située en haut à droite.
 
-On observe alors que notre base de données d'exemple possède 43 variables (colonnes) et 7572 observations (rangées). On peut aussi oberser le « type » de chaque variable, son format d'encodage, juste en dessous de son nom. Voici les différents types de variables possibles :
+On observe alors que la base de données présentée en exemple contient 43 variables (colonnes) et 7572 observations (rangées). On peut aussi oberser le « type » de chaque variable et son format d'encodage, juste en dessous de son nom. Voici les différents types de variables possibles dans R :
 
 - int = nombres entiers
 - num ou float = nombres décimaux
@@ -127,15 +127,19 @@ On observe alors que notre base de données d'exemple possède 43 variables (col
 base
 ```
 
-C'est à cette étape qu'on doit bien comprendre les deux éléments centraux d'une base de données : les observations et les variables.
+C'est à cette étape qu'il est nécessaire de bien comprendre les deux éléments centraux d'une base de données : les observations et les variables.
 
 ### Observations
 
-Il est important de bien comprendre ce que chaque observation (rangée) signifie ou représente puisqu'il s'agit là de l'unité d'analyse de la base de données. Les données concernent-elles des individus, des agrégats comme des pays, des évènements, etc ?
+Il est important de bien comprendre ce que chaque observation (rangée) signifie, ou représente, puisqu'il s'agit là de l'unité d'analyse de la base de données. Qu'est-ce que nous étudions ici? Les données concernent-elles des individus, des agrégats comme des pays ou des villes, des évènements ponctuels, des années, etc?
 
 ### Variables
 
-Il est aussi primordial de comprendre de quoi est constituée chaque colonne de la base de données. Chaque colonne étant une variable, elle est mesurée par un indicateur précis qui n'est parfois pas codé de manière intuitive. C'est pourquoi il est nécessaire de ce référer constamment au **codebook** qui fait le lien entre le codage des données dans R et ce qu'elles représentent de manière qualitative. Il s'agit de notre bible lorsque l'on travaille avec des données complexes. Chaque base de données devrait venir avec un codebook lors de son téléchargement pour être capable de bien comprendre ce que représente chacune des valeurs possibles des variables que nous analyserons. Par exemple, les valeurs possibles à une question du genre "Quelle province du Canada habitez-vous?" pourrait être des chiffres de 1 à 13. Mais qu'est-ce que signifie la réponse 12 à cette question? Il faudra aller voir dans le codebook pour trouver à quelle province correspond cette valeur.
+Il est aussi primordial de comprendre ce que chaque colonne pertinente à l'analyse représente. Chaque colonne étant une variable, elle est mesurée par un indicateur précis qui n'est parfois pas codé de manière intuitive. C'est pourquoi il est nécessaire de ce référer constamment au **codebook** de la base de données, l'outil qui fait le lien entre le codage des variables et des valeurs dans R et ce qu'elles représentent de manière qualitative, concrète.
+
+Il s'agit de notre bible lorsque l'on travaille avec des données complexes. Chaque base de données devrait venir avec un codebook lors de son téléchargement pour être capable de bien comprendre ce que représente chacune des valeurs possibles des variables que nous souhaitons analyser. Par exemple, les valeurs possibles à une question du genre "Quelle province du Canada habitez-vous?" pourrait être des options chiffrées de 1 à 13. Mais qu'est-ce que signifie la réponse 12 à cette question? Il faudra aller voir dans le codebook pour trouver à quelle province correspond cette valeur!
+
+Pour la base de données qui est utilisée en exemple dans ce guide, le codebook a été synthétisé par le Professeur Jean-Herman Guay et est disponible facilement sur [cette page](https://dimension.usherbrooke.ca/pages/25) du site Dimension.
 
 ## *Renommer des variables (colonnes)*
 
