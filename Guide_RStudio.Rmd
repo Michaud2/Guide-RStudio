@@ -98,7 +98,7 @@ library("EPA")
 
 L'importation d'une base de données se fait de la manière la plus facile à l'aide de la fonction importer() qui provient du package personnalisé. La fonction vous guide dans l'importation de la base en posant quelques questions simples à répondre directement dans la console.
 
-Pour suivre les exemples qui seront présentés dans ce guide, vous pouvez importer la base de données en format **.dta (STATA)** qui est hébergée sur mon DropBox personnel via le lien suivant en faisant un copier coller (SANS GUILLEMETS) dans la console lorsque ce sera demandé, ou en l'ajoutant directement comme valeur de l'argument data : <https://www.dropbox.com/s/kowsvc0l0tzq0c8/ces_2019.dta?dl=1>
+Pour suivre les exemples qui seront présentés dans ce guide, vous pouvez importer la base de données en format **.dta (STATA)** qui est hébergée sur mon DropBox personnel via le lien suivant en faisant un copier coller (SANS GUILLEMETS) dans la console lorsque ce sera demandé, ou en l'ajoutant directement comme valeur de l'argument data : <https://www.dropbox.com/s/kowsvc0l0tzq0c8/ces_2019.dta?dl=1>. L'importation de la base de données prend un certain puisqu'elle contient un très grand nombre d'observations.
 
 ```{r base_importer, eval = FALSE}
 
