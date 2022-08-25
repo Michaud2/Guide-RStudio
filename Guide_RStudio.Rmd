@@ -102,9 +102,9 @@ Pour suivre les exemples qui seront présentés dans ce guide, vous pouvez impor
 
 ```{r base_importer, eval = FALSE}
 
-base = importer("https://dimension.usherbrooke.ca/donnees/base2015CES.csv")
+base = importer("")
 # OU
-base = importer(data = "https://www.dropbox.com/s/kowsvc0l0tzq0c8/ces_2019.dta?dl=1")
+base = importer(data = "https://dimension.usherbrooke.ca/donnees/base2015CES.csv")
 ```
 
 # **MANIPULATIONS SUR UNE BASE DE DONNÉES**
