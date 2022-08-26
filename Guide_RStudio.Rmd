@@ -102,7 +102,11 @@ Pour suivre les exemples qui seront présentés dans ce guide, vous pouvez impor
 
 ```{r base_importer, eval = FALSE}
 
-base = importer("")
+fichier = tcltk::tk_choose.files()
+fichier = file.choose()
+fichier = choose.files()
+
+base = importer(data = fichier)
 # OU
 base = importer(data = "https://dimension.usherbrooke.ca/donnees/base2015CES.csv")
 ```
