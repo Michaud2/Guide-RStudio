@@ -90,21 +90,20 @@ Voici comment installer et activer le [package personnalisé](https://github.com
 ```{r install_packages, eval=FALSE, results='hide'}
 install.packages("devtools")
 library("devtools")
-install_github("Michaud2/Package-R-EPA")
+install_github("Michaud2/Package-R-EPA", ref = "development", force = TRUE)
 library("EPA")
 ```
 
 # **IMPORTATION D'UNE BASE DE DONNÉES**
 
-L'importation d'une base de données se fait de la manière la plus facile à l'aide de la fonction Importer() qui provient du package personnalisé. La fonction vous guide dans l'importation de la base en posant quelques questions simples à répondre directement dans la console.
+L'importation d'une base de données se fait de la manière la plus facile à l'aide de la fonction importer() qui provient du package personnalisé. La fonction vous guide dans l'importation de la base en posant quelques questions simples à répondre directement dans la console.
 
-Pour suivre les exemples qui seront présentés dans ce guide, vous pouvez importer la base de données en format *.csv français* qui est hébergée sur le lien suivant en faisant un copier coller (SANS GUILLEMETS) dans la console lorsque ce sera demandé, ou en l'ajoutant directement comme valeur de l'argument data : <https://dimension.usherbrooke.ca/donnees/base2015CES.csv>
+Pour suivre les exemples qui seront présentés dans ce guide, vous pouvez importer la base de données en format **.csv (français)** qui est hébergée sur le site Dimension via le lien suivant en faisant un copier coller (SANS GUILLEMETS) dans la console lorsque ce sera demandé, ou en l'ajoutant directement comme valeur de l'argument data : <https://dimension.usherbrooke.ca/donnees/base2015CES.csv>
 
-```{r base, eval = FALSE}
-
-base = Importer()
+```{r base_importer, eval = FALSE}
+base = importer()
 # OU
-base = Importer(data = "https://dimension.usherbrooke.ca/donnees/base2015CES.csv")
+base = importer(data = "https://dimension.usherbrooke.ca/donnees/base2015CES.csv")
 ```
 
 # **MANIPULATIONS SUR UNE BASE DE DONNÉES**
@@ -143,10 +142,10 @@ Pour la base de données qui est utilisée en exemple dans ce guide, le codebook
 
 ## *Renommer des variables (colonnes)*
 
-On peut renommer des colonnes précises à l'aide de la fonction Renommer() qui fait partie du package personnalisé. On renomme ici les variables "age" et "p.aborig" pour "an_naissance" et "autochtone"
+On peut renommer des colonnes précises à l'aide de la fonction renommer() qui fait partie du package personnalisé. On renomme ici les variables "age" et "p.aborig" pour "an_naissance" et "autochtone"
 
 ```{r base_rename}
-base = Renommer(base, c("age", "p.aborig"), c("an_naissance", "autochtone"))
+base = renommer(base, c("age", "p.aborig"), c("an_naissance", "autochtone"))
 ```
 
 ## *Recoder les valeurs d'une variable*
@@ -234,28 +233,28 @@ base_femmes
 
 ## *Variable qualitative*
 
-La fonction SommaireQuali() du package personnalisé permet d'afficher le mode et les fréquences des valeurs, ce qui offre un aperçu très clair de la distribution avec laquelle on travaille. Cette fonction est nécessaire afin de bien comprendre les données avec lesquelles on travaille et les caractéristiques d'une distribution. N'hésitez pas à l'utiliser à outrance.
+La fonction univar_quali() du package personnalisé permet d'afficher le mode et les fréquences des valeurs, ce qui offre un aperçu très clair de la distribution avec laquelle on travaille. Cette fonction est nécessaire afin de bien comprendre les données avec lesquelles on travaille et les caractéristiques d'une distribution. N'hésitez pas à l'utiliser à outrance.
 
-Par défaut, le second argument "na.rm" a la valeur "TRUE", ce qui permet de ne pas considérer les NA dans l'équation. Si vous désirez considérer les NA, vous pouvez inscrire "na.rm = FALSE".
+Par défaut, le second argument "na.rm" a la valeur "TRUE", ce qui permet de ne pas considérer les NA dans l'équation. Si vous désirez considérer les NA, vous pouvez ajouter une virgule suivie de "na.rm = FALSE" après "base$a_vote" avant la fin de la parenthèse.
 
 ```{r univar_quali}
-freq_vote = SommaireQuali(base$a_vote)
+freq_vote = univar_quali(base$a_vote)
 ```
 
 ## *Variable quantitative*
 
-Suivant le même principe que pour une variable qualitative, la fonction SommaireQuanti() du package personnalisé permet d'obtenir les informations importantes à la description d'une distribution, mais cette fois-ci pour une variable quantitative. Cette fonction ressort une liste de trois objets (moyenne, médiane et écart-type) qui peuvent ensuite être accéder individuellement.
+Suivant le même principe que pour une variable qualitative, la fonction univar_quanti() du package personnalisé permet d'obtenir les informations importantes à la description d'une distribution, mais cette fois-ci pour une variable quantitative. Cette fonction ressort une liste de trois objets (moyenne, médiane et écart-type) qui peuvent ensuite être accéder individuellement.
 
 Tout comme pour la fonction précédente, le second argument "na.rm" a la valeur "TRUE" par défaut, ce qui permet de ne pas considérer les NA dans l'équation. Si vous désirez considérer les NA, vous pouvez inscrire "na.rm = FALSE".
 
 ```{r univar_quanti}
-income_sommaire = SommaireQuanti(base$income)
+income_univar = univar_quanti(base$income)
 ```
 
 ```{r, eval=FALSE}
-income_sommaire$moyenne
-income_sommaire$mediane
-income_sommaire$ecart_type
+income_univar$moyenne
+income_univar$mediane
+income_univar$ecart_type
 ```
 
 # **ANALYSE BIVARIÉE**
@@ -283,7 +282,7 @@ Voici maintenat un tableau qui présente les différentes mesures de taille de l
 |:-------------:|:-----------------:|:-----------:|:-----------:|:-----------:|
 |     Quali + Quali      |         V de Cramer         |   0.1   |   0.3   |   0.5   |
 | Quali (dicho) + Quanti |         D de Cohen          |   0.2   |   0.5   |   0.8   |
-| Quali (poly) + Quanti  |       tau de Kendall        | (-) 0.1 | (-) 0.3 | (-) 0.5 |
+| Quali (poly ordo.) + Quanti  |       tau de Kendall        | (-) 0.1 | (-) 0.3 | (-) 0.5 |
 |    Quanti + Quanti     |        r de Pearson         | (-) 0.1 | (-) 0.3 | (-) 0.5 |
 
 ## *Deux variables qualitatives*
@@ -295,8 +294,8 @@ Dans cet exemple, nous utiliserons les variables "sex.r" et "p.voted" pour véri
 Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin de voir s'il faut procéder à un recodage. On peut vérifier leurs valeurs selon les méthodes présentées à la section sur l'analyse univariée.
 
 ```{r quali_quali_recode}
-freq_sexe = SommaireQuali(base$sex.r, na.rm = FALSE)
-freq_vote = SommaireQuali(base$p.voted, na.rm = FALSE)
+freq_sexe = univar_quali(base$sex.r, na.rm = FALSE)
+freq_vote = univar_quali(base$p.voted, na.rm = FALSE)
 
 base$sexe = recode(base$sex.r, '1="Homme" ; 2="Femme" ; else=NA')
 base$a_vote = recode(base$p.voted, '1="Oui" ; 2="Non" ; else=NA')
@@ -306,12 +305,12 @@ Après ces manipulation, la variable "a_vote" prend les valeurs "Oui" ou "Non", 
 
 ### Significativité et taille de l'effet
 
-La fonction QualiQuali() du package personnalisé permet de calculer la valeur du p, la valeur du V de Cramer (mesure de taille de l'effet associée à ce type de croisement) et de présenter les données visuellement sur un tableau croisé.
+La fonction bivar_quali_quali() du package personnalisé permet de calculer la valeur du p, la valeur du V de Cramer (mesure de taille de l'effet associée à ce type de croisement) et de présenter les données visuellement sur un tableau croisé.
 
 La fonction renvoie une liste qui contient la valeur du p et le V de Cramer. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
 
 ```{r p_V_quali_quali}
-p_V_sexe_vote = QualiQuali(base$sexe, base$a_vote)
+p_V_sexe_vote = bivar_quali_quali(base$sexe, base$a_vote)
 
 p = p_V_sexe_vote$p_value
 p
@@ -341,8 +340,8 @@ Pour reproduire manuellement le même tableau et le personnaliser d'avantage, il
 CrossTable(base$a_vote, base$sexe,
            prop.c = TRUE,
            prop.r = FALSE,
-           prop.t=FALSE,
-           prop.chisq=FALSE,
+           prop.t = FALSE,
+           prop.chisq = FALSE,
            format = "SPSS")
 ```
 
@@ -390,8 +389,8 @@ Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin 
 \*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
 
 ```{r quali_quanti_D_recode}
-freq_sexe = SommaireQuali(base$sex.r, na.rm = TRUE)
-freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
+freq_sexe = univar_quali(base$sex.r, na.rm = TRUE)
+freq_revenu = univar_quanti(base$income, na.rm = TRUE)
 
 base$sexe = recode(base$sex.r, '1="Homme" ; 2="Femme" ; else=NA')
 base$revenu = base$income
@@ -404,12 +403,12 @@ Après ces manipulation, la variable "revenu" est continue entre 5000 et 250000,
 
 Lorsque la variable qualitative est dichotomique, il faut utiliser le D de Cohen pour mesurer la différence entre les deux valeurs possible de la variable indépendante (X).
 
-La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du D de Cohen et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI).
+La fonction bivar_quali_quanti() du package personnalisé permet de calculer la valeur du p, la valeur du D de Cohen et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI).
 
 La fonction renvoie une liste qui contient la valeur du p et le D de Cohen. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
 
 ```{r p_D_quali_quanti}
-p_D_sexe_revenu = QualiQuanti(base$sexe, base$revenu)
+p_D_sexe_revenu = bivar_quali_quanti(base$sexe, base$revenu)
 
 p = p_D_sexe_revenu$p_value
 p
@@ -442,7 +441,7 @@ violin_box = ggplot() +
                fill = "#01FA85",
                outlier.color = "#01FA85",
                outlier.size = 2) +
-  scale_y_continuous(breaks = seq(0,350000,25000),
+  scale_y_continuous(breaks = seq(0, 350000, 25000),
                      expand = expansion(mult = c(0, .05)),
                      labels = dollar_format()) +
   labs(title = "Croisement entre une variable qualitative et une quantitative",
@@ -467,8 +466,8 @@ Comme d'habitude, il faut vérifier les valeurs possibles des variables afin de 
 \*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
 
 ```{r quali_quanti_ANOVA_recode}
-freq_provinces = SommaireQuali(base$province, na.rm = FALSE)
-freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
+freq_provinces = univar_quali(base$province, na.rm = FALSE)
+freq_revenu = univar_quanti(base$income, na.rm = TRUE)
 
 base$provinces = recode(base$province, '1="Alberta" ;
                             2="Colombie-Britannique" ;
@@ -489,12 +488,12 @@ Après ces manipulation, la variable "revenu" est continue entre 5000 et 250000,
 
 Lorsque la variable indépendante qualitative est polytomique non-ordonnée, il faut comparer les différents groupes à l'aide d'une analyse de la variance (ANOVA). L'ANOVA nécessite des tests d'hypothèses plus approfondis pour arriver à offrir un équivalent de la mesure de la taille de l'effet. L'ANOVA, en elle-même, ne fait qu'informer s'il existe au moins seule différence significative entre deux valeurs possibles de la variable indépendante (X), sans toutefois identifier quels groupes sont concernés.
 
-La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI). En plus de cela, la fonction calcule automatiquement toutes les combinaisons possibles de comparaisons de moyennes entre deux groupes. Elle affiche ce résultat sous forme d'un grand tableau
+La fonction bivar_quali_quanti() du package personnalisé permet de calculer la valeur du p et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI). En plus de cela, la fonction calcule automatiquement toutes les combinaisons possibles de comparaisons de moyennes entre deux groupes. Elle affiche ce résultat sous forme d'un grand tableau.
 
 La fonction renvoie une liste qui contient uniquement la valeur du p. Ce résultat sous forme de liste peut être sauvegardée dans un nouvelle objet accessible à l'aide du signe de dollar (\$).
 
 ```{r p_quali_quanti}
-p_provinces_revenu = QualiQuanti(base$provinces, base$revenu)
+p_provinces_revenu = bivar_quali_quanti(base$provinces, base$revenu)
 
 p = p_provinces_revenu$p_value
 p
@@ -527,11 +526,11 @@ violin_box = ggplot() +
                fill = "#01FA85",
                outlier.color = "#01FA85",
                outlier.size = 2) +
-  scale_y_continuous(breaks = seq(0,350000,25000),
+  scale_y_continuous(breaks = seq(0, 350000, 25000),
                      expand = expansion(mult = c(0, .05)),
                      labels = dollar_format()) +
   labs(title = "Croisement entre une variable qualitative et une quantitative",
-       x = "provinces",
+       x = "Provinces et territoires",
        y = "Salaire annuel") +
   theme_defaut(couleur = "#018849",
                grille = "h",
@@ -553,10 +552,10 @@ Avant de croiser ces deux variables, on se doit de vérifier leurs valeurs afin 
 \*Pour cet exemple, nous avons circonsrit la variable de revenu aux personnes qui gagnent entre 5000\$ et 250000\$ afin de retirer les valeurs absurdes de l'échantillon. Cette manipulation permet une meilleure présentation visuelle des données, mais il faut garder en tête qu'elle représente un énorme raccourci méthodologique dans le cadre d'une recherche.
 
 ```{r quali_quanti_T_recode}
-freq_interet = SommaireQuali(base$p.intpol, na.rm = TRUE)
-freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
+freq_interet = univar_quali(base$p.intpol, na.rm = TRUE)
+freq_revenu = univar_quanti(base$income, na.rm = TRUE)
 
-base$polint = recode(base$p.intpol, "c(1,2,3)=1 ; c(4,5)=2 ;c(6,7)=3 ; c(8,9,10)=4 ; else=NA")
+base$polint = recode(base$p.intpol, "c(1,2,3)=1 ; c(4,5)=2 ; c(6,7)=3 ; c(8,9,10)=4 ; else=NA")
 base$revenu = base$income
 base$revenu[base$revenu <= 5000 | base$revenu >= 250000] = NA
 ```
@@ -567,12 +566,12 @@ Après ces manipulation, la variable "revenu" est continue entre 5000 et 250000,
 
 Lorsque la variable indépendante qualitative est polytomique ordonnée, il faut utiliser le Tau de Kendall pour mesurer la différence entre les valeurs possible de la variable indépendante (X).
 
-La fonction QualiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du Tau de Kendall et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI).
+La fonction bivar_quali_quanti() du package personnalisé permet de calculer la valeur du p, la valeur du Tau de Kendall et de présenter un tableau qui montre la moyenne de la variable dépendante (Y) pour chaque groupe (valeurs possibles de la VI).
 
 La fonction renvoie une liste qui contient la valeur du p et le Tau de Kendall. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
 
 ```{r p_T_quali_quanti}
-p_Tau_polint_revenu = QualiQuanti(base$polint, base$revenu, Y_ord = TRUE)
+p_Tau_polint_revenu = bivar_quali_quanti(base$polint, base$revenu, Y_ord = TRUE)
 
 p = p_Tau_polint_revenu$p_value
 p
@@ -605,11 +604,11 @@ violin_box = ggplot() +
                fill = "#01FA85",
                outlier.color = "#01FA85",
                outlier.size = 2) +
-  scale_y_continuous(breaks = seq(0,350000,25000),
+  scale_y_continuous(breaks = seq(0, 350000, 25000),
                      expand = expansion(mult = c(0, .05)),
                      labels = dollar_format()) +
   labs(title = "Croisement entre une variable qualitative et une quantitative",
-       x = "polint",
+       x = "Intérêt pour la politique",
        y = "Salaire annuel") +
   theme_defaut(couleur = "#018849",
                grille = "h",
@@ -629,8 +628,8 @@ Avant de croiser deux variables quantitatives entre elles, il est de mise d'effe
 
 ```{r quanti_quanti_r_recode}
 
-freq_age = SommaireQuanti(base$age, na.rm = TRUE)
-freq_revenu = SommaireQuanti(base$income, na.rm = TRUE)
+freq_age = univar_quanti(base$age, na.rm = TRUE)
+freq_revenu = univar_quanti(base$income, na.rm = TRUE)
 
 base$age[base$age == 1000] = NA
 base$age = 2015 - base$age
@@ -643,12 +642,12 @@ base$revenu[base$revenu <= 5000 | base$revenu >= 250000] = NA
 
 Pour un croisement entre deux variables quantitatives, on doit mesurer la relation à l'aide du coefficient de corrélation (r de Pearson) et du coefficient de corrélation (R2 ou R carré) afin de vérifier si les deux variables varient significativement de manière proportionnelle ou inversement proportionnelle.
 
-La fonction QuantiQuanti() du package personnalisé permet de calculer la valeur du p, la valeur du r de Pearson et celle du R carré, en plus de l'analyse du modèle de régression linéaire. La fonction finie par présenter un graphique rudimentaire de la relation entre les deux variables qui inclue la droite de régression et son équation.
+La fonction bivar_quanti_quanti() du package personnalisé permet de calculer la valeur du p, la valeur du r de Pearson et celle du R carré, en plus de produire l'analyse du modèle de régression linéaire. La fonction finie par présenter un graphique rudimentaire de la relation entre les deux variables qui inclue la droite de régression et son équation.
 
 La fonction renvoie une liste qui contient la valeur du p, le r de Pearson et le R2. Cette liste peut être sauvegardée dans un nouvelle objet et on peut ensuite accéder aux deux valeurs à l'aide du signe de dollar (\$).
 
 ```{r p_r_r2_quanti_quanti}
-p_r_r2_age_revenu = QuantiQuanti(base$age, base$revenu)
+p_r_r2_age_revenu = bivar_quanti_quanti(base$age, base$revenu)
 
 p_r_r2_age_revenu$p_value
 p_r_r2_age_revenu$r_Pearson
@@ -675,19 +674,19 @@ nuage = ggplot() +
                 formula = y ~ x, # y ~ poly(x, 2) --> permet une formule quadratique
                 se = TRUE, # FALSE enlève la zone d'erreur
                 color = "blue") +
-  geom_label_repel(x = max(data$age)*0.9,
-                   y = max(data$revenu)*0.9,
-                   mapping = aes(label = lm_eq(data$age,data$revenu)),
-                   box.padding   = 0.5, 
+  geom_label_repel(x = max(data$age) * 0.9,
+                   y = max(data$revenu) * 0.9,
+                   mapping = aes(label = lm_eq(data$age, data$revenu)),
+                   box.padding   = 0.5,
                    point.padding = 0.5,
                    fill = "#018849",
                    color = "white",
                    vjust = "inward",
                    hjust = "inward",
                    parse = TRUE) +
-    scale_x_continuous(breaks = seq(18,115,10),
+    scale_x_continuous(breaks = seq(18, 115, 10),
                        expand = expansion(mult = c(0, 0))) +
-    scale_y_continuous(breaks = seq(0,350000,25000),
+    scale_y_continuous(breaks = seq(0, 350000, 25000),
                        labels = dollar_format(),
                        expand = expansion(mult = c(0, 0))) +
     labs(title = "Croisement entre deux variables quantitatives",
@@ -695,6 +694,6 @@ nuage = ggplot() +
          y = "Salaire annuel") +
     theme_defaut(couleur = "#018849",
                  grille = "hv",
-                 grille_top = FALSE)
+                 grille_top = TRUE)
 nuage
 ```
